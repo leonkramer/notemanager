@@ -19,7 +19,7 @@ func main() {
 
 	switch os.Args[1] {
 		case "list":
-			listHandler()
+			listHandler(os.Args[2:])
 		
 		case "add":
 			addHandler()

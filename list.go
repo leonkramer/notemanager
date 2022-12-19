@@ -10,20 +10,41 @@ import (
 	"github.com/google/uuid"
 )
 
-func listHandler() {
-	if (len(os.Args) > 2) {
-		switch os.Args[2] {
-			case "templates":
-				listTemplates(notemanager.TemplateDir)
-  
-		  	case "notes":
-				listNotes()
-  
-		  	default:
-				fmt.Println("default")
+func listHandler(args []string) {
+	var filter NoteFilter
+
+	RESTART:
+	for k, v := range args {
+		if v[0] == '+' {
+			filter.TagsInclude = append(filter.TagsInclude, v[1:])
+			// copy last element to current
+			args[k] = args[len(args)-1]
+			// remove last element
+			args = args[:len(args)-1]
+			goto RESTART
 		}
-	} else {
-		listNotes()
+
+		if v[0] == '-' {
+			filter.TagsExclude = append(filter.TagsExclude, v[1:])
+			args[k] = args[len(args)-1]
+			args = args[:len(args)-1]
+			goto RESTART
+		}
+	}
+
+	if (len(args) == 0) {
+		args = []string{"notes"}
+	}
+
+	switch args[0] {
+		case "templates":
+			listTemplates(notemanager.TemplateDir)
+
+		case "notes":
+			listNotes(filter)
+
+		default:
+			fmt.Println("default")
 	}
 }
 
@@ -45,7 +66,7 @@ func listTemplates(path string) {
 }
 
 
-func listNotes() {
+func listNotes(filter NoteFilter) {
 	files, err := os.ReadDir(notemanager.NoteDir)
 	if err != nil {
         log.Fatal(err)
@@ -65,7 +86,13 @@ func listNotes() {
 			log.Fatal(err)
 		}
 
-		notes = append(notes, note)
+		matches, err := note.MatchesFilter(filter)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if matches {
+			notes = append(notes, note)
+		}
 		
         if string(file.Name()[0]) == "." {
           continue
