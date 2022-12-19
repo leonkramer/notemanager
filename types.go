@@ -32,7 +32,6 @@ type Note struct {
 	*/
 }
 
-note list +bla +blub -nottag before:20221201 after:blub 
 type NoteFilter struct {
 	Tags []string
 	Before time.Time

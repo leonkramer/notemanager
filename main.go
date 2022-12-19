@@ -39,7 +39,7 @@ func main() {
 }
 
 func displayUsageGeneric() {
-	fmt.Println("Notemanager Usage:
+	fmt.Println(`Notemanager Usage:
 	
 	Generic usage:
 	---
@@ -53,7 +53,7 @@ func displayUsageGeneric() {
 	ID [ read ]					Read note with pagination
 	ID print					Print note
 	ID delete					Mark note as deleted
-	")
+	`)
 }
 
 // moves temporary note from tempDir to specific note directory inside noteDir
