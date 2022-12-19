@@ -32,6 +32,10 @@ func main() {
 
 		case "help":
 			displayUsageGeneric()
+		
+		case "version":
+			fmt.Println(`Notemanager Version 0.1
+Author: Leon Kramer <leonkramer@gmail.com>`)
 
 		default:
 			noteHandler()
