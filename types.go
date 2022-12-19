@@ -33,7 +33,8 @@ type Note struct {
 }
 
 type NoteFilter struct {
-	Tags []string
+	TagsInclude []string
+	TagsExclude []string
 	Before time.Time
 	After time.Time
 	Deleted bool
@@ -228,4 +229,40 @@ func (n Note) Delete() (err error) {
 
 func (n Note) ShortId() (s string) {
 	return n.Id.String()[0:8]
+}
+
+// Checks if note matches the given filter
+func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
+	// Must have tags
+	for _, x := range filter.TagsInclude {
+		exists := false
+		for _, t := range n.Tags {
+			if t == x {
+				exists = true
+				continue
+			}
+		}
+		if exists == false {
+			ret = false
+			return
+		}
+	}
+
+	// Must not have tags
+	for _, x := range filter.TagsExclude {
+		exists := false
+		for _, t := range n.Tags {
+			if t == x {
+				exists = true
+				continue
+			}
+		}
+		if exists == true {
+			ret = false
+			return
+		}
+	}
+
+	ret = true
+	return
 }
