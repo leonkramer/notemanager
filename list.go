@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"errors"
 	"strings"
+	"sort"
 	"github.com/google/uuid"
 )
 
@@ -99,6 +100,11 @@ func listNotes(filter NoteFilter) {
         }
     }
 
+	// sort notes by DateCreated ASC
+	sort.Slice(notes, func(a int, b int) bool {
+		return notes[a].DateCreated.String() < notes[b].DateCreated.String()
+	})
+
 	fields := []string{
 		"id",
 		"tags",
@@ -140,6 +146,7 @@ func listNotes(filter NoteFilter) {
 			}
 			output = append(output, row)
 		}
+
 
 		var str string
 		for k, v := range fields {
