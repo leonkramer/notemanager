@@ -65,21 +65,21 @@ Date:           {{ nmDate }}
 ## Examples
 ### Creating Notes
     note add +foo +bar My Foobar Title
-Create note with tags _foo_ and bar and title _My Foobar Title_
+Create note with tags **foo, bar** and title **My Foobar Title**
 
 
     note add -t weekly Weekly Meeting
-Create a note with title _Weekly Meeting_ and template file _weekly_
+Create a note with title **Weekly Meeting** and template file **weekly**
 
 
 ### Listing Notes
     note list +foo +bar
-List notes, include only notes with tags _foo_ and _bar_
+List notes, include only notes with tags **foo** and **bar**
 
 
     note list +foo
-List notes, include only notes with tag _foo_
+List notes, include only notes with tag **foo**
 
 
     note list -foo
-List notes, exclude notes with tag _foo_
+List notes, exclude notes with tag **foo**
