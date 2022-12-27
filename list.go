@@ -14,6 +14,8 @@ import (
 func listHandler(args []string) {
 	var filter NoteFilter
 
+	filter.IncludeDeleted = false
+
 	RESTART:
 	for k, v := range args {
 		if v[0] == '+' {

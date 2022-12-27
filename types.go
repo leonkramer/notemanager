@@ -37,7 +37,7 @@ type NoteFilter struct {
 	TagsExclude []string
 	Before time.Time
 	After time.Time
-	Deleted bool
+	IncludeDeleted bool
 	Attachments bool
 }
 
@@ -231,8 +231,15 @@ func (n Note) ShortId() (s string) {
 	return n.Id.String()[0:8]
 }
 
-// Checks if note matches the given filter
+// Checks if note matches the given filter.
 func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
+	if filter.IncludeDeleted == false {
+		if n.DateDeleted.IsZero() == false {
+			ret = false
+			return
+		}
+	}
+
 	// Must have tags
 	for _, x := range filter.TagsInclude {
 		exists := false
