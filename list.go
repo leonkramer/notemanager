@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"log"
+	"flag"
 	"regexp"
 	"errors"
 	"strings"
@@ -12,9 +13,15 @@ import (
 )
 
 func listHandler(args []string) {
+	fs := flag.NewFlagSet("note list", flag.ContinueOnError)
+	optionAll := fs.Bool("a", false, "Show all notes, include deleted")
+	if err := fs.Parse(os.Args[2:]); err != nil {
+		return
+	}
+
 	var filter NoteFilter
 
-	filter.IncludeDeleted = false
+	filter.IncludeDeleted = *optionAll
 
 	RESTART:
 	for k, v := range args {

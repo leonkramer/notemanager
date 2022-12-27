@@ -47,7 +47,13 @@ func noteHandler() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			fmt.Println("OK")
 
+		case "undelete":
+			err := note.Undelete()
+			if err != nil {
+				log.Fatal(err)
+			}
 			fmt.Println("OK")
 
 

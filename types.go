@@ -217,6 +217,7 @@ func (n Note) Output() (b []byte) {
 	return
 }
 
+// Mark a note as deleted by setting the DateDeleted value to current time stamp.
 func (n Note) Delete() (err error) {
 	if n.DateDeleted != (time.Time{}) {
 		return
@@ -227,6 +228,14 @@ func (n Note) Delete() (err error) {
 	return
 }
 
+// Delete the DateDeleted value and save to data file
+func (n Note) Undelete() (err error) {
+	n.DateDeleted = time.Time{}
+	err = n.WriteData()
+	return
+}
+
+// UUIDs are long and clumsy
 func (n Note) ShortId() (s string) {
 	return n.Id.String()[0:8]
 }

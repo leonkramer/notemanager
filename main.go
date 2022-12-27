@@ -47,16 +47,26 @@ func displayUsageGeneric() {
 	
 	Generic usage:
 	---
-	add [ +TAG .. ] TITLE		Add note
-	help						Display usage
-	list [ FILTER ] 			List notes which match filter
-	version						Display version
+	note add [ +TAG .. ] TITLE
+		Add note
+	note help
+		Display usage
+	note list [ OPTIONS ] [ FILTER ]
+		List notes which match filter
+		Options:
+			-a		List all notes, include deleted
+	note version
+		Display version
+
 
 	Note specific usage:
 	---
-	ID [ read ]					Read note with pagination
-	ID print					Print note
-	ID delete					Mark note as deleted
+	note ID [ read ]
+		Read note with pagination
+	note ID print
+		Print note
+	note ID delete
+		Mark note as deleted
 	`)
 }
 
