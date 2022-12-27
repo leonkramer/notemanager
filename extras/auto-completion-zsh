@@ -1,0 +1,25 @@
+#
+# Add to .zshrc
+#
+
+autoload -U compinit
+compinit
+
+
+_notemanager() {
+    local state
+    _arguments '1: :->first' '2: :->second'
+
+    case $state in
+      first)
+        compadd add help list version $words[1]
+        _describe command "($(ls  ~/.notes/notes | awk '{ print substr($1,1,8) }'))"
+        ;;
+      second)
+        case $words[2] in
+          list)
+            _describe 'command' "('-a:List all notes, include deleted')"
+        esac
+    esac
+
+}
