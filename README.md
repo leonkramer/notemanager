@@ -85,5 +85,5 @@ List notes, include only notes with tags **foo** and **bar**
 List notes, include only notes with tag **foo**
 
 
-    note list -foo
-List notes, exclude notes with tag **foo**
+    note list -- -foo
+List notes, exclude notes with tag **foo**. -- Terminates the parsing of options. Without command tries to understand -foo as an option.

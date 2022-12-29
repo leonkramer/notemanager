@@ -70,28 +70,11 @@ type Config struct {
 type Attachment struct {
 	Filename string `yaml:"filename"`
 	Sha1 string `yaml:"sha1"` 
-	Bytes uint `yaml:"bytes"`
 	DateCreated time.Time `yaml:"dateCreated"`
 }
 
-func (m Metadata) Write() (err error) {
-	err = os.WriteFile(notemanager.NoteDir + "/" + m.Id.String() + "/meta", m.Yaml(), 0600)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	return
-}
-
-func (m Metadata) Yaml() (encodedYaml []byte) {
-	encodedYaml, err := yaml.Marshal(m)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return
-}
-
+// checks if note exists
 func (n Note) Exists() bool {
 	if _, err := os.Stat(notemanager.NoteDir + "/" + n.Id.String()); errors.Is(err, os.ErrNotExist) {
 		return false
@@ -101,6 +84,7 @@ func (n Note) Exists() bool {
 }
 
 
+// write yaml encoded note struct to data file
 func (n Note) WriteData() (err error) {
 	err = os.WriteFile(notemanager.NoteDir + "/" + n.Id.String() + "/data", n.Yaml(), 0600)
 	if err != nil {
@@ -110,6 +94,8 @@ func (n Note) WriteData() (err error) {
 	return
 }
 
+
+// encode note struct to yaml
 func (n Note) Yaml() (encodedYaml []byte) {
 	encodedYaml, err := yaml.Marshal(n)
 	if err != nil {
@@ -168,11 +154,6 @@ func (n Note) ReadContent(version ...string) (content []byte, err error) {
 	return
 }
 
-/* func (n *Note) Data() (err error) {
-	n.Meta, err = readMetadataFile(n.Id.String())
-	return
-} */
-
 
 func loadNote(id string) (n Note, err error) {
 	yml, err := os.ReadFile(notemanager.NoteDir + "/" + id + "/data")
@@ -189,6 +170,8 @@ func loadNote(id string) (n Note, err error) {
 	return
 }
 
+
+// creates text output of note.
 func (n Note) Output() (b []byte) {
 	tpl :=  `+
 + Title:       %s

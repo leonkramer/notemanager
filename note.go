@@ -2,79 +2,17 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
+	"io"
 	"log"
+	"fmt"
 	"regexp"
-	"os/exec"
-	"bytes"
 	_"time"
 	"path/filepath"
 	"github.com/google/uuid"
 )
 
-func noteHandler() {
-	// is first arg an uuid?
-	id, err := uuid.Parse(os.Args[1])
-	if (err != nil) {
-		// check if abbreviated uuid
-		if isUuidAbbr(os.Args[1]) == false {
-			fmt.Println("Invalid note syntax")
-			os.Exit(2)
-		}
 
-		id, err = uuidByAbbr(os.Args[1])
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(2)
-		}
-	}
-
-	note, err := loadNote(id.String())
-
-	if err != nil {
-		fmt.Println("err: ", err)
-	}
-
-	action := "read"
-	if len(os.Args) > 2 {
-		action = os.Args[2]
-	}
-
-	switch(action) {
-		case "delete":
-			err := note.Delete()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("OK")
-
-		case "undelete":
-			err := note.Undelete()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("OK")
-
-
-		case "read":
-			cmd := exec.Command(notemanager.TerminalReader)
-			cmd.Stdin = bytes.NewReader(note.Output())
-			cmd.Stdout = os.Stdout
-
-			err := cmd.Run()
-    		if err != nil {
-        		log.Fatal(err)
-    		}
-
-		case "print":
-			fmt.Printf("%s", note.Output())
-
-
-		default:
-			fmt.Println("unknown")
-	}
-}
 
 // Generate a uuid from a abbreviated uuid string.
 // The abbreviated string must be at the start of the uuid and be
@@ -83,7 +21,8 @@ func noteHandler() {
 // Example: 1cf77aeb => 1cf77aeb-fcb2-44ad-87d6-69717dba1d0c
 func uuidByAbbr(x string) (r uuid.UUID, err error) {
 	if isUuidAbbr(x) == false {
-		err = errors.New("No such note id")
+		//err = errors.New("%s: No such note id")
+		err = fmt.Errorf("%s: No such note id", r.String())
 		return
 	}
 	
@@ -114,4 +53,58 @@ func isUuidAbbr(x string) (bool) {
 		return true
 	}
 	return false
+}
+
+
+// Copies a regular file from src path to dst path.
+// if dst already exists return an error.
+func copyRegularFile(src string, dst string) (err error) {
+	sfh, err := os.Stat(src)
+    if err != nil {
+        return
+    }
+
+	if sfh.Mode().IsRegular() == false {
+		err = errors.New("Not a regular file: " + src)
+		return
+	}
+
+	// check if file exists
+	_, err = os.Stat(dst)
+	if err == nil {
+		err = errors.New("File already exists. Aborting.")
+		return err
+	}
+
+	sf, err := os.Open(src)
+	if err != nil {
+        return
+    }
+	defer sf.Close()
+
+
+	df, err := os.Create(dst)
+	if err != nil {
+        return
+    }
+	defer df.Close()
+	
+	// copy file
+	_, err = io.Copy(df, sf)
+	// compare checksums
+	srcHash, err := fileSha1(src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dstHash, err := fileSha1(dst)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if srcHash == dstHash {
+		// files are same, OK
+		return
+	} else {
+		err = errors.New("Copy failed")
+		return
+	}
 }
