@@ -14,28 +14,28 @@ See the Release section.
 ```
 Notemanager Usage:
 	
-	Generic usage:
-	---
-	note add [ +TAG .. ] TITLE
-		Add note
-	note help
-		Display usage
-	note list [ OPTIONS ] [ FILTER ]
-		List notes which match filter
-		Options:
-			-a		List all notes, include deleted
-	note version
-		Display version
+Generic usage:
+---
+note add [ +TAG .. ] TITLE
+	Add note
+note help
+	Display usage
+note list [ OPTIONS ] [ FILTER ]
+	List notes which match filter
+	Options:
+		-a		List all notes, include deleted
+note version
+	Display version
 
 
-	Note specific usage:
-	---
-	note ID [ read ]
-		Read note with pagination
-	note ID print
-		Print note
-	note ID delete
-		Mark note as deleted
+Note specific usage:
+---
+note ID [ read ]
+	Read note with pagination
+note ID print
+	Print note
+note ID delete
+	Mark note as deleted
 ```
 
 # Templates
