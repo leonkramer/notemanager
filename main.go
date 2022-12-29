@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"log"
+	"encoding/hex"
 	"regexp"
 	"strconv"
 	_"time"
+	"io"
+	"crypto/sha1"
 	"github.com/gosimple/conf"
 	"gopkg.in/yaml.v3"
 )
@@ -34,7 +37,7 @@ func main() {
 			displayUsageGeneric()
 		
 		case "version":
-			fmt.Println(`Notemanager Version 0.1
+			fmt.Println(`Notemanager Version 0.15
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
 		default:
@@ -45,29 +48,29 @@ Author: Leon Kramer <leonkramer@gmail.com>`)
 func displayUsageGeneric() {
 	fmt.Println(`Notemanager Usage:
 	
-	Generic usage:
-	---
-	note add [ +TAG .. ] TITLE
-		Add note
-	note help
-		Display usage
-	note list [ OPTIONS ] [ FILTER ]
-		List notes which match filter
-		Options:
-			-a		List all notes, include deleted
-	note version
-		Display version
+Generic usage:
+---
+note add [ +TAG .. ] TITLE
+	Add note
+note help
+	Display usage
+note list [ OPTIONS ] [ FILTER ]
+	List notes which match filter
+	Options:
+		-a		List all notes, include deleted
+note version
+	Display version
 
 
-	Note specific usage:
-	---
-	note ID [ read ]
-		Read note with pagination
-	note ID print
-		Print note
-	note ID delete
-		Mark note as deleted
-	`)
+Note specific usage:
+---
+note ID [ read ]
+	Read note with pagination
+note ID print
+	Print note
+note ID delete
+	Mark note as deleted
+`)
 }
 
 // moves temporary note from tempDir to specific note directory inside noteDir
@@ -123,4 +126,22 @@ func noteId(file string) []byte {
 	return body
 }
 
+
+// generate sha1 hash from file
+func fileSha1(path string) (ret string, err error) {
+	fh, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer fh.Close()
+
+	hash := sha1.New()
+	_, err = io.Copy(hash, fh)
+	if err != nil {
+		return
+	}
+	hashInBytes := hash.Sum(nil)[:20]
+	ret = hex.EncodeToString(hashInBytes)
+	return
+}
 
