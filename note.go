@@ -83,14 +83,19 @@ func copyRegularFile(src string, dst string) (err error) {
 	defer sf.Close()
 
 
-	df, err := os.Create(dst)
+	//df, err := os.Create(dst)
+	//df, err := os.OpenFile(dst, os.O_CREATE|os.O_EXCL, notemanager.FilePermissionReadonly)
+	df, err := os.OpenFile(dst, os.O_CREATE|os.O_EXCL|os.O_WRONLY, notemanager.FilePermissionReadonly)
 	if err != nil {
         return
     }
 	defer df.Close()
 	
 	// copy file
-	_, err = io.Copy(df, sf)
+	n, err := io.Copy(df, sf)
+	if err != nil {
+		log.Fatal("n:", n, "err:", err)
+	}
 	// compare checksums
 	srcHash, err := fileSha1(src)
 	if err != nil {

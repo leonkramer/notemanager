@@ -6,6 +6,7 @@ import (
 	"log"
 	"encoding/hex"
 	"regexp"
+	"path/filepath"
 	"strconv"
 	_"time"
 	"io"
@@ -78,14 +79,14 @@ func moveFile(id string, version string) (err error) {
 	oldFile := fmt.Sprintf("%s/%s", notemanager.TempDir, id)
 	newFile := fmt.Sprintf("%s/%s/%s", notemanager.NoteDir, id, version)
 
-	os.Mkdir(fmt.Sprintf("%s/%s", notemanager.NoteDir, id), os.ModePerm)
+	os.Mkdir(filepath.Clean(fmt.Sprintf("%s/%s", notemanager.NoteDir, id)), notemanager.FilePermission)
 	err = os.Rename(oldFile, newFile)
 
 	return
 }
 
 func readMetadataFile(id string) (metadata Metadata, err error) {
-	metadataRaw, err := os.ReadFile(notemanager.NoteDir + "/" + id + "/meta")
+	metadataRaw, err := os.ReadFile(filepath.Clean(notemanager.NoteDir + "/" + id + "/meta"))
 	if err != nil {
 		return
 	}
@@ -129,7 +130,7 @@ func noteId(file string) []byte {
 
 // generate sha1 hash from file
 func fileSha1(path string) (ret string, err error) {
-	fh, err := os.Open(path)
+	fh, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return
 	}

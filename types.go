@@ -61,9 +61,13 @@ type Config struct {
 	TempDir string
 	TemplateDir string
 	TerminalReader string
+	FileManager string
 	VersionTimeFormat string
 	OutputTimeFormatShort string
 	OutputTimeFormatLong string
+	FilePermission os.FileMode
+	FilePermissionReadonly os.FileMode
+	DirPermission os.FileMode
 }
 
 
