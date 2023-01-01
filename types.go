@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"path/filepath"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
@@ -80,7 +81,7 @@ type Attachment struct {
 
 // checks if note exists
 func (n Note) Exists() bool {
-	if _, err := os.Stat(notemanager.NoteDir + "/" + n.Id.String()); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String())); errors.Is(err, os.ErrNotExist) {
 		return false
 	} else {
 		return true
@@ -90,7 +91,7 @@ func (n Note) Exists() bool {
 
 // write yaml encoded note struct to data file
 func (n Note) WriteData() (err error) {
-	err = os.WriteFile(notemanager.NoteDir + "/" + n.Id.String() + "/data", n.Yaml(), 0600)
+	err = os.WriteFile(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String() + "/data"), n.Yaml(), 0600)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -150,7 +151,7 @@ func (n Note) ReadContent(version ...string) (content []byte, err error) {
 	}
 
 	//fmt.Println(notemanager.NoteDir + "/" + n.Id.String() + "/" + v)
-	content, err = os.ReadFile(notemanager.NoteDir + "/" + n.Id.String() + "/" + v)
+	content, err = os.ReadFile(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String() + "/" + v))
 	if err != nil {
 		return
 	}
@@ -160,7 +161,7 @@ func (n Note) ReadContent(version ...string) (content []byte, err error) {
 
 
 func loadNote(id string) (n Note, err error) {
-	yml, err := os.ReadFile(notemanager.NoteDir + "/" + id + "/data")
+	yml, err := os.ReadFile(filepath.Clean(notemanager.NoteDir + "/" + id + "/data"))
 	if err != nil {
 		return
 	}

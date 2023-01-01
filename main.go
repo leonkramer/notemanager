@@ -76,10 +76,10 @@ note ID delete
 
 // moves temporary note from tempDir to specific note directory inside noteDir
 func moveFile(id string, version string) (err error) {
-	oldFile := fmt.Sprintf("%s/%s", notemanager.TempDir, id)
-	newFile := fmt.Sprintf("%s/%s/%s", notemanager.NoteDir, id, version)
+	oldFile := filepath.Clean(fmt.Sprintf("%s/%s", notemanager.TempDir, id))
+	newFile := filepath.Clean(fmt.Sprintf("%s/%s/%s", notemanager.NoteDir, id, version))
 
-	os.Mkdir(filepath.Clean(fmt.Sprintf("%s/%s", notemanager.NoteDir, id)), notemanager.FilePermission)
+	os.Mkdir(filepath.Clean(fmt.Sprintf("%s/%s", notemanager.NoteDir, id)), notemanager.DirPermission)
 	err = os.Rename(oldFile, newFile)
 
 	return
@@ -130,7 +130,7 @@ func noteId(file string) []byte {
 
 // generate sha1 hash from file
 func fileSha1(path string) (ret string, err error) {
-	fh, err := os.Open(filepath.Clean(path))
+	fh, err := os.Open(path)
 	if err != nil {
 		return
 	}
