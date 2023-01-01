@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"flag"
 	"log"
 	"os"
@@ -66,13 +67,13 @@ func addNote() (err error) {
 	}
 
 
-	in, err := os.ReadFile(notemanager.TemplateDir + "/" + *template)
+	in, err := os.ReadFile(filepath.Clean(notemanager.TemplateDir + "/" + *template))
 	if err != nil {
 		in = []byte{}
 	}
 	timestamp := time.Now().UTC()
 	id := uuid.New()
-	file := fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, id.String())
+	file := filepath.Clean(fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, id.String()))
 	
 	// Replace placeholders
 	in = bytes.ReplaceAll(in, []byte("{{ nmId }}"), []byte(id.String()))

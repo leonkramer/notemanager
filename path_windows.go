@@ -4,10 +4,14 @@ package main
 
 import (
 	"os"
-	_"fmt"
 	"log"
+	"bytes"
+	"os/exec"
+	"fmt"
+	"path/filepath"
 	"github.com/gosimple/conf"
 )
+
 
 func parseConfig() (c Config) {
 	homedir, err := os.UserHomeDir()
@@ -15,7 +19,7 @@ func parseConfig() (c Config) {
         log.Fatal(err)
     }
 
-	cfg, err := conf.ReadFile(homedir + `/AppData/Roaming/Notemanager/noterc`)
+	cfg, err := conf.ReadFile(homedir + `\AppData\Roaming\Notemanager\noterc`)
 	if err != nil {
         log.Fatal(err)
     }
@@ -28,14 +32,27 @@ func parseConfig() (c Config) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		c.DataDir = homedir + `/AppData/Roaming/Notemanager`
+		c.DataDir = homedir + `\AppData\Roaming\Notemanager`
 	}
-	c.TemplateDir = c.DataDir + `/templates`
-	c.TempDir = c.DataDir + `/tmp`
-	c.NoteDir = c.DataDir + `/notes`
+	c.TemplateDir = c.DataDir + `\templates`
+	c.TempDir = c.DataDir + `\tmp`
+	c.NoteDir = c.DataDir + `\notes`
+	// not sure why, but explorer.exe always returns exit code 1
+	// while 'start' does not.
+	c.FileManager = `start /B`
 	c.VersionTimeFormat = "20060102-150405"
 	c.OutputTimeFormatShort = "2006-01-02"
 	c.OutputTimeFormatLong = "2006-01-02 15:04:05"
+
+	// File and Directory Permissions
+
+	// Read+Write
+	c.FilePermission = 0600
+	// ReadOnly. Attachments should be readonly, so they are not being accidently
+	// overwritten, when browsing with file manager.
+	c.FilePermissionReadonly = 0400
+	// Read+Write+Execute
+	c.DirPermission = 0600
 
 	c.Editor, err = cfg.String("default", "editor")
 	// Default to notepad.exe as editor
@@ -50,4 +67,25 @@ func parseConfig() (c Config) {
 	}
 
 	return
+}
+
+func runFileManager(path string) {
+	path = filepath.Clean(path)
+	//cmd := exec.Command("cmd", "/C", notemanager.FileManager, path)
+	//command := append([]string{"/C"}, notemanager.FileManager...)
+	//command = append(command, path)
+	//cmd := exec.Command("cmd", command...)
+	cmd := exec.Command("cmd", "/C", notemanager.FileManager, path)
+
+
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return
+	}
 }

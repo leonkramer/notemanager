@@ -5,6 +5,10 @@ package main
 import (
 	"os"
 	"log"
+	"os/exec"
+	"bytes"
+	"fmt"
+	"path/filepath"
 	"github.com/gosimple/conf"
 )
 
@@ -32,9 +36,20 @@ func parseConfig() (c Config) {
 	c.TemplateDir = c.DataDir + "/templates"
 	c.TempDir = c.DataDir + "/tmp"
 	c.NoteDir = c.DataDir + "/notes"
+	c.FileManager = "Open"
 	c.VersionTimeFormat = "20060102-150405"
 	c.OutputTimeFormatShort = "2006-01-02"
 	c.OutputTimeFormatLong = "2006-01-02 15:04:05"
+
+	// File and Directory Permissions
+
+	// Read+Write
+	c.FilePermission = 0600
+	// ReadOnly. Attachments should be readonly, so they are not being accidently
+	// overwritten, when browsing with file manager.
+	c.FilePermissionReadonly = 0400
+	// Read+Write+Execute
+	c.DirPermission = 0700
 
 	editor, err := cfg.String("default", "editor")
 	if err == nil {
@@ -49,4 +64,23 @@ func parseConfig() (c Config) {
 	}
 
 	return
+}
+
+
+func runFileManager(path string) {
+	path = filepath.Clean(path)
+	//command := append([]Any{"cmd", "/C"}, notemanager.FileManager..., path)
+	//command := append(notemanager.FileManager, path)
+	cmd := exec.Command(notemanager.FileManager, path)
+	
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		return
+	}
 }

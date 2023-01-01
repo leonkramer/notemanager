@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"errors"
 	"os"
+	"path/filepath"
 	"log"
 	"bytes"
 	"os/exec"
@@ -21,6 +22,7 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 
 	MAIN:
 	for _, file := range args[0:] {
+		basename := filepath.Base(file)
 		sha1, err := fileSha1(file)
 		if err != nil {
 			sha1 = "failed"
@@ -32,21 +34,27 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 				continue MAIN
 			}
 		}
-		
-		err = copyRegularFile(file, notemanager.NoteDir + "/" + note.Id.String() + "/attachments/" + file)
+
+		dstDir := filepath.Clean(notemanager.NoteDir + "/" + note.Id.String() + "/" + "attachments")
+		err = os.MkdirAll(dstDir, os.FileMode(notemanager.DirPermission))
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = copyRegularFile(file, filepath.Clean(dstDir + "/" + basename))
 		if err != nil {
 			if err.Error() == "File already exists. Aborting." {
-				fmt.Printf("File already attached. Use another name: %s.\n", file)
+				fmt.Printf("File already attached. Use another name: %s.\n", basename)
 			}
+			fmt.Println(err)
 			continue
 		}
 		note.Attachments = append(note.Attachments, Attachment{
-			Filename: file,
+			Filename: basename,
 			Sha1: sha1,
 			DateCreated: time.Now().UTC(),
 		})
 		note.WriteData()
-		fmt.Printf("%s: Attached file %s.\n", note.ShortId, file)
+		fmt.Printf("%s: Attached file %s.\n", note.ShortId(), file)
 	}
 
 	return
@@ -67,8 +75,8 @@ func noteFileHandler(note Note, args []string) (err error) {
 			noteFileAddHandler(note, args[1:])
 
 		case "browse":
-			fmt.Println("browse file")
-		
+			noteFileBrowseHandler(note)
+
 		case "delete":
 			fmt.Println("delete file")
 		
@@ -76,7 +84,7 @@ func noteFileHandler(note Note, args []string) (err error) {
 			fmt.Println("purge file")
 
 		case "help":
-			fmt.Println("display help")
+			fmt.Println("<Insert help here.>")
 	}
 
 	return
@@ -147,4 +155,10 @@ func noteHandler() {
 		default:
 			fmt.Println("Unknown command")
 	}
+}
+
+func noteFileBrowseHandler(note Note) {
+	path := filepath.Clean(fmt.Sprintf("%s/%s/attachments", notemanager.NoteDir, note.Id.String()))
+	runFileManager(path)
+
 }
