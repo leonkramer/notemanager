@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strings"
 	"sort"
+	"path/filepath"
 	"github.com/google/uuid"
 )
 
@@ -181,7 +182,7 @@ func listNotes(filter NoteFilter) {
 }
 
 func getNote(n Note, version string) {
-	files, err := os.ReadDir(notemanager.NoteDir + "/" + n.Id.String())
+	files, err := os.ReadDir(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -208,7 +209,7 @@ func getNote(n Note, version string) {
 // Return array of all note versions.
 // Each note version is represented by the file name with syntax YYYYMMDD-HHMMSS.
 func noteVersions(n Note) (versions []string) {
-	files, err := os.ReadDir(notemanager.NoteDir + "/" + n.Id.String())
+	files, err := os.ReadDir(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String()))
 	if err != nil {
 		log.Fatal(err)
 	}

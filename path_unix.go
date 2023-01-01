@@ -18,7 +18,7 @@ func parseConfig() (c Config) {
         log.Fatal(err)
     }
 
-	cfg, err := conf.ReadFile(homedir + "/.noterc")
+	cfg, err := conf.ReadFile(filepath.Clean(homedir + "/.noterc"))
 	if err != nil {
         log.Fatal(err)
     }
@@ -31,18 +31,20 @@ func parseConfig() (c Config) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		c.DataDir = homedir + "/.notes"
+		c.DataDir = filepath.Clean(homedir + "/.notes")
 	}
-	c.TemplateDir = c.DataDir + "/templates"
-	c.TempDir = c.DataDir + "/tmp"
-	c.NoteDir = c.DataDir + "/notes"
-	c.FileManager = "Open"
+	c.TemplateDir = filepath.Clean(c.DataDir + "/templates")
+	c.TempDir = filepath.Clean(c.DataDir + "/tmp")
+	c.NoteDir = filepath.Clean(c.DataDir + "/notes")
+	
 	c.VersionTimeFormat = "20060102-150405"
 	c.OutputTimeFormatShort = "2006-01-02"
 	c.OutputTimeFormatLong = "2006-01-02 15:04:05"
 
-	// File and Directory Permissions
+	// FileManager Command (Finder)
+	c.FileManager = "Open"
 
+	// File and Directory Permissions
 	// Read+Write
 	c.FilePermission = 0600
 	// ReadOnly. Attachments should be readonly, so they are not being accidently
@@ -58,6 +60,7 @@ func parseConfig() (c Config) {
 		log.Fatal("Mandatory setting 'editor' is missing")
 	}
 
+	// Pagination Reader (Mac: less)
 	c.TerminalReader, err = cfg.String("default", "terminalReader")
 	if err != nil {
 		log.Fatal("Mandatory setting 'terminalReader' is missing")
@@ -68,7 +71,6 @@ func parseConfig() (c Config) {
 
 
 func runFileManager(path string) {
-	path = filepath.Clean(path)
 	//command := append([]Any{"cmd", "/C"}, notemanager.FileManager..., path)
 	//command := append(notemanager.FileManager, path)
 	cmd := exec.Command(notemanager.FileManager, path)

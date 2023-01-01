@@ -26,7 +26,7 @@ func uuidByAbbr(x string) (r uuid.UUID, err error) {
 		return
 	}
 	
-	matches, err := filepath.Glob(notemanager.NoteDir + "/" + x + "*")
+	matches, err := filepath.Glob(filepath.Clean(notemanager.NoteDir + "/" + x + "*"))
 	if (err != nil) {
 		return
 	}
@@ -92,9 +92,9 @@ func copyRegularFile(src string, dst string) (err error) {
 	defer df.Close()
 	
 	// copy file
-	n, err := io.Copy(df, sf)
+	_, err = io.Copy(df, sf)
 	if err != nil {
-		log.Fatal("n:", n, "err:", err)
+		log.Fatal("Error copying file")
 	}
 	// compare checksums
 	srcHash, err := fileSha1(src)
