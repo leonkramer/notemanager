@@ -26,7 +26,7 @@ func parseConfig() (c Config) {
 
 	datadir, err := cfg.String("default", "datadir")
 	if err == nil {
-		c.DataDir = datadir
+		c.DataDir = filepath.Clean(datadir)
 	} else {
 		homedir, err := os.UserHomeDir()
 		if err != nil {
@@ -55,15 +55,19 @@ func parseConfig() (c Config) {
 	// Read+Write+Execute
 	c.DirPermission = 0600
 
-	c.Editor, err = cfg.String("default", "editor")
+	editor, err := cfg.String("default", "editor")
 	// Default to notepad.exe as editor
-	if err != nil {
+	if err == nil {
+		c.Editor = filepath.Clean(editor)
+	} else {
 		c.Editor = `notepad`
 	}
 
 	// Default to more.exe as reader with pagination
-	c.TerminalReader, err = cfg.String("default", "terminalReader")
-	if err != nil {
+	terminalReader, err := cfg.String("default", "terminalReader")
+	if err == nil {
+		c.TerminalReader = filepath.Clean(terminalReader)
+	} else {
 		c.TerminalReader = `more`
 	}
 

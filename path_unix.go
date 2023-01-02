@@ -25,7 +25,7 @@ func parseConfig() (c Config) {
 
 	datadir, err := cfg.String("default", "datadir")
 	if err == nil {
-		c.DataDir = datadir
+		c.DataDir = filepath.Clean(datadir)
 	} else {
 		homedir, err := os.UserHomeDir()
 		if err != nil {
@@ -55,7 +55,7 @@ func parseConfig() (c Config) {
 
 	editor, err := cfg.String("default", "editor")
 	if err == nil {
-		c.Editor = editor
+		c.Editor = filepath.Clean(editor)
 	} else {
 		log.Fatal("Mandatory setting 'editor' is missing")
 	}
