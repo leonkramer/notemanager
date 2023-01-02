@@ -13,57 +13,82 @@ import (
 )
 
 func parseConfig() (c Config) {
+	var cfgExists bool
+
 	homedir, err := os.UserHomeDir()
 	if err != nil {
         log.Fatal(err)
     }
 
-	cfg, err := conf.ReadFile(filepath.Clean(homedir + "/.noterc"))
-	if err != nil {
-        log.Fatal(err)
-    }
-
-	datadir, err := cfg.String("default", "datadir")
-	if err == nil {
-		c.DataDir = filepath.Clean(datadir)
-	} else {
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatal(err)
-		}
-		c.DataDir = filepath.Clean(homedir + "/.notes")
-	}
-	c.TemplateDir = filepath.Clean(c.DataDir + "/templates")
-	c.TempDir = filepath.Clean(c.DataDir + "/tmp")
-	c.NoteDir = filepath.Clean(c.DataDir + "/notes")
-	
+	// Syntax of note version file names
 	c.VersionTimeFormat = "20060102-150405"
-	c.OutputTimeFormatShort = "2006-01-02"
-	c.OutputTimeFormatLong = "2006-01-02 15:04:05"
 
-	// FileManager Command (Finder)
-	c.FileManager = "Open"
+	// Short timestamp format
+	c.OutputTimeFormatShort = "2006-01-02"
+
+	// Long timestamp format
+	c.OutputTimeFormatLong = "2006-01-02 15:04:05"
 
 	// File and Directory Permissions
 	// Read+Write
 	c.FilePermission = 0600
+
 	// ReadOnly. Attachments should be readonly, so they are not being accidently
 	// overwritten, when browsing with file manager.
 	c.FilePermissionReadonly = 0400
+
 	// Read+Write+Execute
 	c.DirPermission = 0700
 
-	editor, err := cfg.String("default", "editor")
+	// Command Wrapper for Default Applications
+	c.FileManager = `open`
+
+	// Pagination Reader (Default: less)
+	c.TerminalReader = `less`
+
+	// default data directory
+	c.DataDir = filepath.Clean(homedir + "/.notes")
+
+	// set default editor
+	editors := []string{"nano", "nvim", "vim", "vi", "emacs", "ed"}
+	for _, editor := range editors {
+		path, err := exec.LookPath(editor)
+		if (err == nil) {
+			c.Editor = filepath.Clean(path)
+			break
+		}
+	}
+	
+	cfg, err := conf.ReadFile(filepath.Clean(homedir + "/.noterc"))
 	if err == nil {
-		c.Editor = filepath.Clean(editor)
-	} else {
-		log.Fatal("Mandatory setting 'editor' is missing")
+		cfgExists = true
+    } else {
+		cfgExists = false
 	}
 
-	// Pagination Reader (Mac: less)
-	c.TerminalReader, err = cfg.String("default", "terminalReader")
-	if err != nil {
-		log.Fatal("Mandatory setting 'terminalReader' is missing")
+	if cfgExists {
+		datadir, err := cfg.String("default", "datadir")
+		if err == nil {
+			c.DataDir = filepath.Clean(datadir)
+		}
+
+		editor, err := cfg.String("default", "editor")
+		if err == nil {
+			c.Editor = filepath.Clean(editor)
+		}
+
+		terminalReader, err := cfg.String("default", "terminalReader")
+		if err == nil {
+			c.TerminalReader = filepath.Clean(terminalReader)
+		}
+	}
+
+	c.TemplateDir = filepath.Clean(c.DataDir + "/templates")
+	c.TempDir = filepath.Clean(c.DataDir + "/tmp")
+	c.NoteDir = filepath.Clean(c.DataDir + "/notes")
+
+	if c.Editor == "" {
+		log.Fatal("Please define a text editor")
 	}
 
 	return
