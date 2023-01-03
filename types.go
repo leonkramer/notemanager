@@ -36,10 +36,13 @@ type Note struct {
 type NoteFilter struct {
 	TagsInclude []string
 	TagsExclude []string
-	Before time.Time
-	After time.Time
+	CreatedBefore time.Time
+	CreatedAfter time.Time
+	ModifiedBefore time.Time
+	ModifiedAfter time.Time
 	IncludeDeleted bool
-	Attachments bool
+	IsDeleted bool
+	HasFile bool
 }
 
 

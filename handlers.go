@@ -137,6 +137,9 @@ func noteHandler() {
 		case "file":
 			noteFileHandler(note, os.Args[3:])
 
+		case "modify":
+			noteModifyHandler(note, os.Args[3:])
+
 
 		case "read":
 			cmd := exec.Command(notemanager.TerminalReader)
@@ -161,4 +164,17 @@ func noteFileBrowseHandler(note Note) {
 	path := filepath.Clean(fmt.Sprintf("%s/%s/attachments", notemanager.NoteDir, note.Id.String()))
 	runFileManager(path)
 
+}
+
+func noteModifyHandler(note Note, args []string) (err error) {
+	if len(args) == 0 {
+		fmt.Println("note enough parameters")
+	}
+	fil, err := parseFilter(args)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Fatal(fil)
+
+	return
 }
