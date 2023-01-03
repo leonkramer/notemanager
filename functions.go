@@ -2,71 +2,77 @@ package main
 
 import (
 	"time"
-	"fmt"
+	_"fmt"
 	"log"
 	"errors"
 	"regexp"
 	"strings"
 )
 
-func parseFilter(args []string) (filter NoteFilter, err error) {
-	for _, v := range args {
+// parse CLI arguments for filtering
+func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
+	for k, v := range args {
+		// +tag
 		if v[0] == '+' {
 			filter.TagsInclude = append(filter.TagsInclude, v[1:])
-			/* // copy last element to current
-			args[k] = args[len(args)-1]
-			// remove last element
-			args = args[:len(args)-1]
-			goto RESTART */
 			continue
 		}
 
+		// -tag
 		if v[0] == '-' {
 			filter.TagsExclude = append(filter.TagsExclude, v[1:])
-		/* 	args[k] = args[len(args)-1]
-			args = args[:len(args)-1]
-			goto RESTART */
 			continue
 		}
 
+		// created.after:
 		if len(v) > 14 {
 			if v[0:14] == "created.after:" {
-				fmt.Println("Found created.after:", v)
-				date, err  := parseTimestamp(v[14:])
-				//tmp, err := time.Parse("2006-01-02 15:04:05", v[14:])
-				//tmp = tmp.Local()
+				ts := v[14:]
+				filter.CreatedAfter, err = parseTimestamp(ts)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalf("Timestamp parsing failed: %s", ts)
 				}
-				fmt.Println("date", date.Format("2006-01-02 15:04:05"))
-				filter.CreatedAfter = time.Now()
 				continue
 			}
 		}
 
+		// created.before:
 		if len(v) > 15 {
 			if v[0:15] == "created.before:" {
-				fmt.Println("Found created.before:")
-				filter.CreatedBefore = time.Now()
+				ts := v[15:]
+				filter.CreatedBefore, err = parseTimestamp(ts)
+				if err != nil {
+					log.Fatalf("Timestamp parsing failed: %s", ts)
+				}
 				continue
 			}
 		}
 
+		// modified.after:
 		if len(v) > 15 {
 			if v[0:15] == "modified.after:" {
-				fmt.Println("Found modified.after:")
-				filter.ModifiedAfter = time.Now()
+				ts := v[15:]
+				filter.ModifiedAfter, err = parseTimestamp(ts)
+				if err != nil {
+					log.Fatalf("Timestamp parsing failed: %s", ts)
+				}
 				continue
 			}
 		}
 
+		// modified.before:
 		if len(v) > 16 {
 			if v[0:16] == "modified.before:" {
-				fmt.Println("Found modified.before:")
-				filter.ModifiedBefore = time.Now()
+				ts := v[16:]
+				filter.ModifiedBefore, err = parseTimestamp(ts)
+				if err != nil {
+					log.Fatalf("Timestamp parsing failed: %s", ts)
+				}
 				continue
 			}
 		}
+		rargs = args[k:]
+		return
 	}
 	
 	return
