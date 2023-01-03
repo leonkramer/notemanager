@@ -170,12 +170,13 @@ func noteModifyHandler(note Note, args []string) (err error) {
 	if len(args) == 0 {
 		fmt.Println("note enough parameters")
 	}
-	fil, rargs, err := parseFilter(args)
-	if err != nil {
+	plus, neg, rargs, err := parseTagModifiers(args)
+/* 	fil, rargs, err := parseFilter(args)
+ */	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("rargs", rargs)
-	log.Fatal(fil)
+	log.Fatal("plus:", plus, "neg:", neg)
 
 	return
 }

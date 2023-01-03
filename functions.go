@@ -2,14 +2,17 @@ package main
 
 import (
 	"time"
-	_"fmt"
+	"fmt"
 	"log"
 	"errors"
 	"regexp"
 	"strings"
+	"golang.org/x/exp/slices"
 )
 
-// parse CLI arguments for filtering
+// parse Command for FILTER arguments.
+// i.e. +tag, -tag, created.after, created.before, 
+// modified.after, modified.before
 func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 	for k, v := range args {
 		// +tag
@@ -78,7 +81,7 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 	return
 }
 
-// parses the date format YYYY-DD-MM HH:MM:SS and some shorter
+// parses a string with format YYYY-DD-MM HH:MM:SS and some shorter
 // forms of it into a time.Time variable.
 // At least a date must be given, if a time is given, at least HH:MM
 // must be provided.
@@ -137,5 +140,35 @@ func parseTimestamp(str string) (ts time.Time, err error) {
 	}
     
 	ts, err = time.ParseInLocation(format, str, time.Now().Location())
+	return
+}
+
+// parse command for supplied tag modifiers, i.e. +something -something etc
+func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs []string, err error) {
+	for k, v := range args {
+		// match +somestring
+		r := regexp.MustCompile(`^\+\pL+$`)
+		if r.MatchString(v) {
+			if slices.Contains(posTags, v[1:]) {
+				continue
+			}
+			posTags = append(posTags, v[1:])
+			continue
+		}
+
+		// match -somestring
+		r = regexp.MustCompile(`^\-\pL+$`)
+		if r.MatchString(v) {
+			if slices.Contains(negTags, v[1:]) {
+				continue
+			}
+			negTags = append(negTags, v[1:])
+			continue
+		}
+
+		rargs = args[k:]
+		break
+	}
+	
 	return
 }
