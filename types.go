@@ -294,6 +294,8 @@ func (n *Note) RemoveTags(t []string) {
 	for k, v := range n.Tags {
 		if slices.Contains(t, v) {
 			n.Tags = slices.Delete(n.Tags, k, k+1)
+			// slice has changed, could be out of bounds.
+			// Therefore loop through it again.
 			goto RESTART
 		}
 	}
