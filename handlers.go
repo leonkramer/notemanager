@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"time"
 	"github.com/google/uuid"
+	"strings"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -166,17 +167,24 @@ func noteFileBrowseHandler(note Note) {
 
 }
 
-func noteModifyHandler(note Note, args []string) (err error) {
+func noteModifyHandler(n Note, args []string) (err error) {
 	if len(args) == 0 {
-		fmt.Println("note enough parameters")
+		fmt.Println("Not enough parameters")
 	}
-	plus, neg, rargs, err := parseTagModifiers(args)
-/* 	fil, rargs, err := parseFilter(args)
- */	if err != nil {
+	addTags, delTags, rargs, err := parseTagModifiers(args)
+	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("rargs", rargs)
-	log.Fatal("plus:", plus, "neg:", neg)
 
+	n.AddTags(addTags)
+	n.RemoveTags(delTags)
+	if len(rargs) > 0 {
+		n.Title = strings.Join(rargs, " ")
+	}
+	
+	err = n.WriteData()
+	if err == nil {
+		fmt.Println(n.ShortId() + ": Updated note.")
+	}
 	return
 }

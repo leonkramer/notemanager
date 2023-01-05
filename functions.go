@@ -2,7 +2,7 @@ package main
 
 import (
 	"time"
-	"fmt"
+	_"fmt"
 	"log"
 	"errors"
 	"regexp"
@@ -15,14 +15,22 @@ import (
 // modified.after, modified.before
 func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 	for k, v := range args {
-		// +tag
-		if v[0] == '+' {
+		// match +somestring tag
+		r := regexp.MustCompile(`^\+[\pL0-9]+$`)
+		if r.MatchString(v) {
+			if slices.Contains(filter.TagsInclude, v[1:]) {
+				continue
+			}
 			filter.TagsInclude = append(filter.TagsInclude, v[1:])
 			continue
 		}
 
-		// -tag
-		if v[0] == '-' {
+		// match -somestring tag
+		r = regexp.MustCompile(`^\-[\pL0-9]+$`)
+		if r.MatchString(v) {
+			if slices.Contains(filter.TagsExclude, v[1:]) {
+				continue
+			}
 			filter.TagsExclude = append(filter.TagsExclude, v[1:])
 			continue
 		}
@@ -147,7 +155,7 @@ func parseTimestamp(str string) (ts time.Time, err error) {
 func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs []string, err error) {
 	for k, v := range args {
 		// match +somestring
-		r := regexp.MustCompile(`^\+\pL+$`)
+		r := regexp.MustCompile(`^\+[\pL0-9]+$`)
 		if r.MatchString(v) {
 			if slices.Contains(posTags, v[1:]) {
 				continue
@@ -157,7 +165,7 @@ func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs
 		}
 
 		// match -somestring
-		r = regexp.MustCompile(`^\-\pL+$`)
+		r = regexp.MustCompile(`^\-[\pL0-9]+$`)
 		if r.MatchString(v) {
 			if slices.Contains(negTags, v[1:]) {
 				continue
@@ -166,6 +174,8 @@ func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs
 			continue
 		}
 
+		// argument does not match
+		// we are done
 		rargs = args[k:]
 		break
 	}
