@@ -15,10 +15,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+
 var cfg *conf.Config
 var notemanager Config
 
 func main() {
+	// disable timestamp
+	log.SetFlags(0)
+	
 	notemanager = parseConfig()
 
 	switch os.Args[1] {

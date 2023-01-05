@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
+	"golang.org/x/exp/slices"
 )
 
 
@@ -36,10 +37,13 @@ type Note struct {
 type NoteFilter struct {
 	TagsInclude []string
 	TagsExclude []string
-	Before time.Time
-	After time.Time
+	CreatedAfter time.Time
+	CreatedBefore time.Time
+	ModifiedAfter time.Time
+	ModifiedBefore time.Time
 	IncludeDeleted bool
-	Attachments bool
+	IsDeleted bool
+	HasFile bool
 }
 
 
@@ -269,4 +273,36 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 
 	ret = true
 	return
+}
+
+
+// add tags to note. if one of the notes already exist
+// the single tag is skipped, but the other tags are added
+func (n *Note) AddTags(t []string) {
+	for _, v := range t {
+		if slices.Contains(n.Tags, v) {
+			continue
+		}
+		n.Tags = append(n.Tags, v)
+	}
+}
+
+// removes tags from note. if one of the notes does not exist
+// the other notes are still removed
+func (n *Note) RemoveTags(t []string) {
+	RESTART:
+	for k, v := range n.Tags {
+		if slices.Contains(t, v) {
+			n.Tags = slices.Delete(n.Tags, k, k+1)
+			goto RESTART
+		}
+	}
+}
+
+func (n *Note) AddTag(t string) {
+	n.AddTags([]string{t})
+}
+
+func (n *Note) RemoveTag(t string) {
+	n.RemoveTags([]string{t})
 }

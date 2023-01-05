@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"time"
 	"github.com/google/uuid"
+	"strings"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -137,6 +138,9 @@ func noteHandler() {
 		case "file":
 			noteFileHandler(note, os.Args[3:])
 
+		case "modify":
+			noteModifyHandler(note, os.Args[3:])
+
 
 		case "read":
 			cmd := exec.Command(notemanager.TerminalReader)
@@ -161,4 +165,26 @@ func noteFileBrowseHandler(note Note) {
 	path := filepath.Clean(fmt.Sprintf("%s/%s/attachments", notemanager.NoteDir, note.Id.String()))
 	runFileManager(path)
 
+}
+
+func noteModifyHandler(n Note, args []string) (err error) {
+	if len(args) == 0 {
+		fmt.Println("Not enough parameters")
+	}
+	addTags, delTags, rargs, err := parseTagModifiers(args)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	n.AddTags(addTags)
+	n.RemoveTags(delTags)
+	if len(rargs) > 0 {
+		n.Title = strings.Join(rargs, " ")
+	}
+	
+	err = n.WriteData()
+	if err == nil {
+		fmt.Println(n.ShortId() + ": Updated note.")
+	}
+	return
 }
