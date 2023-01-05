@@ -170,6 +170,7 @@ func noteFileBrowseHandler(note Note) {
 func noteModifyHandler(n Note, args []string) (err error) {
 	if len(args) == 0 {
 		fmt.Println("Not enough parameters")
+		return
 	}
 	addTags, delTags, rargs, err := parseTagModifiers(args)
 	if err != nil {
