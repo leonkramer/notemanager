@@ -141,14 +141,15 @@ func newNote(noteId string) (n Note, err error) {
 	return
 }
 
-func (n Note) ReadContent(version ...string) (content []byte, err error) {
+// 
+func (n Note) Content(version ...string) (content []byte, err error) {
 	var v string
 
 	if len(version) > 1 {
 		log.Fatal("Method Note.Content: Too many arguments in call")
 	}
 	if len(version) == 0 {
-		v = n.Versions[0]
+		v = n.LatestVersion()
 	}
 	if len(version) == 1 {
 		v = version[0]
@@ -175,13 +176,13 @@ func loadNote(id string) (n Note, err error) {
 		log.Fatal(err)
 	}
 
-	n.latestContent, err = n.ReadContent()
+	n.latestContent, err = n.Content()
 	return
 }
 
 
 // creates text output of note.
-func (n Note) Output() (b []byte) {
+func (n Note) Output(version string) (b []byte) {
 	tpl :=  `+
 + Title:       %s
 + Date:        %s
@@ -195,13 +196,19 @@ func (n Note) Output() (b []byte) {
 %s
 ` 
 
+	
+	content, err := n.Content(version)
+	if err != nil {
+		log.Fatal(err)
+	}
 	s := fmt.Sprintf(tpl,
 		n.Title,
 		n.DateCreated,
 		strings.Join(n.Tags, ", "),
 		len(n.Attachments),
-		n.Versions[len(n.Versions)-1],
-		n.latestContent,
+		//n.Versions[len(n.Versions)-1],
+		version,
+		content,
 	)
 
 	b = []byte(s)
@@ -307,4 +314,25 @@ func (n *Note) AddTag(t string) {
 
 func (n *Note) RemoveTag(t string) {
 	n.RemoveTags([]string{t})
+}
+
+// returns path of note: $NoteDir/$UUID
+func (n Note) Path() (string) {
+	return filepath.Clean(notemanager.NoteDir + `/` + n.Id.String())
+}
+
+// returns latest version of note
+func (n Note) LatestVersion() (string) {
+	return n.Versions[len(n.Versions)-1]
+}
+
+// moves temporary note from tempDir to specific note directory inside noteDir
+func (n Note) moveTmpFile() (err error) {
+	oldFile := filepath.Clean(notemanager.TempDir + `/` + n.Id.String())
+	newFile := filepath.Clean(n.Path() + `/` + n.LatestVersion())
+
+	os.MkdirAll(n.Path(), notemanager.DirPermission)
+	err = os.Rename(oldFile, newFile)
+
+	return
 }

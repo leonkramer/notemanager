@@ -7,6 +7,8 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"os/exec"
+	"os"
 	"golang.org/x/exp/slices"
 )
 
@@ -180,5 +182,15 @@ func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs
 		break
 	}
 	
+	return
+}
+
+// Open the Editor and edit file filepath
+func runEditor(filepath string) (err error) {
+	cmd := exec.Command(notemanager.Editor, filepath)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	
+	err = cmd.Run()	
 	return
 }
