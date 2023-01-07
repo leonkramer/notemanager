@@ -120,6 +120,12 @@ func noteHandler() {
 		action = os.Args[2]
 	}
 
+	var rargs []string
+	if len(os.Args) > 3 {
+		rargs = os.Args[3:]
+	}
+	
+
 	switch(action) {
 		case "delete":
 			err := note.Delete()
@@ -142,10 +148,13 @@ func noteHandler() {
 			noteModifyHandler(note, os.Args[3:])
 
 		case "edit":
-			noteEditHandler(note)
+			err = noteEditHandler(note)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 		case "read":
-			err = noteReadHandler(note, os.Args[3:])
+			err = noteReadHandler(note, rargs)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -245,6 +254,7 @@ func noteEditHandler (n Note) (err error) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		n.DateModified = append(n.DateModified, time.Now().UTC())
 		n.WriteData()
 		fmt.Println(n.ShortId() + ": Created note version " + version)
 	}
