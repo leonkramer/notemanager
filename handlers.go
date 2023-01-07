@@ -307,6 +307,7 @@ func tagsHandler(args []string) (err error) {
 	order := fs.String("o", "count", "Ordering of tags. OPTIONS=count|name")
 	fullOutput := fs.Bool("f", false, "Display notes along with tags")
 	//displayHelp := fs.Bool("h", false, "Display Help")
+	//fmt.Sprintf("%v", *displayHelp)
 	if err = fs.Parse(os.Args[2:]); err != nil {
 		return
 	}
@@ -353,7 +354,7 @@ func tagsHandler(args []string) (err error) {
 		fmt.Printf("%s (%d)\n", k, len(tags[k]))
 		if *fullOutput {
 			for _, t := range tags[k] {
-				fmt.Printf("  - %s: %s\n", t.Id, t.Title)
+				fmt.Printf("  - %s: %s (%s)\n", t.Id, t.Title, t.DateCreated.Format(notemanager.OutputTimeFormatShort))
 			}
 			fmt.Println()
 		}
