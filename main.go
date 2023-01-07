@@ -31,6 +31,9 @@ func main() {
 		
 		case "add":
 			addHandler()
+		
+		case "tags":
+			tagsHandler(os.Args[2:])
 
 /* 		case "read":
 			readHandler()
