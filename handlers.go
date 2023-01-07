@@ -9,6 +9,9 @@ import (
 	"bytes"
 	"os/exec"
 	"time"
+	"flag"
+	"sort"
+	_"golang.org/x/exp/slices"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -285,7 +288,7 @@ func noteReadHandler(n Note, args []string) (err error) {
 	return
 }
 
-
+// display note versions
 func noteVersionsHandler(n Note, args []string) (err error) {
 	for i, ver := range n.Versions {
 		// "% <INT>d: %s\n"
@@ -294,6 +297,67 @@ func noteVersionsHandler(n Note, args []string) (err error) {
 		fmt.Printf(lineTpl, i, ver)
 	}
 	fmt.Printf("---\nTotal: %d\n", len(n.Versions))
+
+	return
+}
+
+// display collection of tags
+func tagsHandler(args []string) (err error) {
+	fs := flag.NewFlagSet("tags", flag.ContinueOnError)
+	order := fs.String("o", "count", "Ordering of tags. OPTIONS=count|name")
+	fullOutput := fs.Bool("f", false, "Display notes along with tags")
+	//displayHelp := fs.Bool("h", false, "Display Help")
+	if err = fs.Parse(os.Args[2:]); err != nil {
+		return
+	}
+
+	args = fs.Args()
+	filter, rargs, err := parseFilter(args)
+	fmt.Sprintln(rargs)
+	notes, err := notes(filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	type TaggedNote struct {
+		Id string
+		Title string
+		DateCreated time.Time
+	}
+	tags := make(map[string][]TaggedNote)
+	for _, n := range notes {
+		for _, tag := range n.Tags {
+			tags[tag] = append(tags[tag], TaggedNote{n.ShortId(), n.Title, n.DateCreated})
+		}
+	}
+
+	// generate slice of tags
+	keys := make([]string, 0, len(tags))
+	for key := range tags {
+		keys = append(keys, key)
+	}
+
+	// sort alphabetically by tag first
+	// or results of multiple calls vary slightly.
+	sort.Strings(keys)
+
+	switch (*order) {
+		case "count":
+			sort.SliceStable(keys, func(i, j int) bool {
+				return len(tags[keys[i]]) > len(tags[keys[j]])
+			})
+	}
+
+	// Default Output
+	for _, k := range keys {
+		fmt.Printf("%s (%d)\n", k, len(tags[k]))
+		if *fullOutput {
+			for _, t := range tags[k] {
+				fmt.Printf("  - %s: %s\n", t.Id, t.Title)
+			}
+			fmt.Println()
+		}
+	}
 
 	return
 }

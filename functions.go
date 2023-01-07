@@ -2,14 +2,16 @@ package main
 
 import (
 	"time"
-	_"fmt"
+	"fmt"
 	"log"
 	"errors"
 	"regexp"
 	"strings"
 	"os/exec"
 	"os"
+	"sort"
 	"golang.org/x/exp/slices"
+	"github.com/google/uuid"
 )
 
 // parse Command for FILTER arguments.
@@ -192,5 +194,107 @@ func runEditor(filepath string) (err error) {
 	cmd.Stdout = os.Stdout
 	
 	err = cmd.Run()	
+	return
+}
+
+func notes(filter NoteFilter) (notes []Note, err error) {
+	files, err := os.ReadDir(notemanager.NoteDir)
+	if err != nil {
+        log.Fatal(err)
+    }
+
+	for _, file := range files {
+		if file.IsDir() == false {
+			continue
+		}
+
+		noteId := uuid.MustParse(file.Name())
+
+		note, err := loadNote(noteId.String())
+		if (err != nil) {
+			log.Fatal(err)
+		}
+
+		matches, err := note.MatchesFilter(filter)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if matches {
+			notes = append(notes, note)
+		}
+    }
+	
+	return
+}
+
+func sortNotes(notes []Note) (ret []Note, err error) {
+	// sort notes by DateCreated ASC
+	sort.Slice(notes, func(a int, b int) bool {
+		return notes[a].DateCreated.String() < notes[b].DateCreated.String()
+	})
+
+	fields := []string{
+		"id",
+		"tags",
+		"title",
+		"created",
+	}
+
+	var output [][]string
+	maxLength := make([]int, len(fields))
+
+	if len(notes) > 0 {
+		// build 2-dimensional slice of notes.
+		// one index per note and another per field.
+		// also obtain the maximum length of entry to get a clean table output.
+		for _, n := range notes {
+			// m = 
+			row := make([]string, 0)
+			var s string
+			for j, field := range fields {	
+				switch field {
+					case "id":
+						s = n.ShortId()
+					
+					case "tags":
+						s = strings.Join(n.Tags, ",")
+
+					case "title":
+						s = n.Title
+
+					case "created":
+						s = n.DateCreated.Local().Format(notemanager.OutputTimeFormatShort)
+				}
+				row = append(row, s)
+
+				// update max length slice
+				if maxLength[j] < len(s) {
+					maxLength[j] = len(s)
+				}
+			}
+			output = append(output, row)
+		}
+
+
+		var str string
+		for k, v := range fields {
+			str += fmt.Sprintf("%-*s", maxLength[k]+2, v)
+		}
+		str += "\n"
+		for k, _ := range fields {
+			str += fmt.Sprintf("%-*s", maxLength[k]+2, "--")
+		}
+		str += "\n"
+		for _, v := range output {
+			//fmt.Println(v)
+			for kk, vv:= range v {
+				str += fmt.Sprintf("%-*s", maxLength[kk]+2, vv)
+			}
+			str += "\n"
+		}
+
+		fmt.Printf("%s", str)
+	}
+
 	return
 }
