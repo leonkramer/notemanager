@@ -91,7 +91,7 @@ func noteFileHandler(note Note, args []string) (err error) {
 	return
 }
 
-
+// note UUID ...
 func noteHandler() {
 	// is first arg an uuid?
 	id, err := uuid.Parse(os.Args[1])
@@ -141,19 +141,23 @@ func noteHandler() {
 		case "modify":
 			noteModifyHandler(note, os.Args[3:])
 
+		case "edit":
+			noteEditHandler(note)
 
 		case "read":
-			cmd := exec.Command(notemanager.TerminalReader)
-			cmd.Stdin = bytes.NewReader(note.Output())
-			cmd.Stdout = os.Stdout
-
-			err := cmd.Run()
-    		if err != nil {
-        		log.Fatal(err)
-    		}
+			err = noteReadHandler(note, os.Args[3:])
+			if err != nil {
+				log.Fatal(err)
+			}
 
 		case "print":
-			fmt.Printf("%s", note.Output())
+			err = notePrintHandler(note, os.Args[3:])
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		case "versions":
+			noteVersionsHandler(note, os.Args[3:])
 
 
 		default:
@@ -187,5 +191,109 @@ func noteModifyHandler(n Note, args []string) (err error) {
 	if err == nil {
 		fmt.Println(n.ShortId() + ": Updated note.")
 	}
+	return
+}
+
+// CMD: note UUID edit
+func noteEditHandler (n Note) (err error) {
+	in, err := os.ReadFile(n.Path() + `/` + n.LatestVersion())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create a temporary file in Notemanager tmp dir.
+	// Once the note editor has been closed check if checksum 
+	// differs from the temporary file. If yes, move the file into
+	// note directory and create data file.
+	tmpFile := filepath.Clean(fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, n.Id.String()))
+	err = os.WriteFile(tmpFile, in, 0600)
+	defer os.Remove(tmpFile)
+	if err != nil {
+		return
+	}
+
+	chksumBefore, err := fileSha1(tmpFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Run the Editor to edit tmpFile
+	cmd := exec.Command(notemanager.Editor, tmpFile)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	
+	err = cmd.Run()
+	if err != nil {
+		return
+	}
+
+	// Editor Done
+	fileinfo, err := os.Stat(tmpFile)
+	if err != nil {
+		return
+	}
+	//timestampAfter := fileinfo.ModTime()
+	version := fileinfo.ModTime().UTC().Format(notemanager.VersionTimeFormat)
+	chksumAfter, err := fileSha1(tmpFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	n.Versions = append(n.Versions, version)
+
+	if chksumBefore != chksumAfter {
+		err = n.moveTmpFile()
+		if err != nil {
+			log.Fatal(err)
+		}
+		n.WriteData()
+		fmt.Println(n.ShortId() + ": Created note version " + version)
+	}
+ 
+	return
+}
+
+func notePrintHandler(n Note, args []string) (err error) {
+	version := n.LatestVersion()
+	if len(args) > 1 {
+		err = errors.New("Too many arguments")
+	}
+	if len(args) > 0 {
+		version = args[0]
+	}
+	fmt.Printf("%s", n.Output(version))
+	return
+}
+
+func noteReadHandler(n Note, args []string) (err error) {
+	version := n.LatestVersion()
+	if len(args) > 1 {
+		err = errors.New("Too many arguments")
+	}
+	if len(args) > 0 {
+		version = args[0]
+	}
+
+	cmd := exec.Command(notemanager.TerminalReader)
+	cmd.Stdin = bytes.NewReader(n.Output(version))
+	cmd.Stdout = os.Stdout
+
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
+
+func noteVersionsHandler(n Note, args []string) (err error) {
+	for i, ver := range n.Versions {
+		// "% <INT>d: %s\n"
+		//lineTpl := fmt.Sprintf("%%%dd: %%s\n", len(string(len(n.Versions)))+1)
+		lineTpl := "%d: %s\n"
+		fmt.Printf(lineTpl, i, ver)
+	}
+	fmt.Printf("---\nTotal: %d\n", len(n.Versions))
+
 	return
 }
