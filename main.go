@@ -20,64 +20,121 @@ var cfg *conf.Config
 var notemanager Config
 
 func main() {
-	// disable timestamp
+	// disable timestamp in Fatal Logs
 	log.SetFlags(0)
+
+	// return exit code 1 for runtime.Goexit() function
+	// used in func Exit(string)
+	defer os.Exit(1)
 	
 	notemanager = parseConfig()
 
-	switch os.Args[1] {
-		case "list":
-			listHandler(os.Args[2:])
-		
+	/* if len(os.Args) == 1 {
+		Exit("Missing arguments")
+	} */
+
+	// expect cmd  syntax:
+	// ./note [ FILTER ] cmd args
+	filter, rargs, err := parseFilter(os.Args[1:])
+	if err != nil {
+		Exit(`Failed to parse arguments`)
+	}
+
+	if len(rargs) == 0 {
+		rargs = []string{"help"}
+		//Exit("Missing arguments")
+	}
+
+	switch rargs[0] {
 		case "add":
 			addHandler()
-		
+
+		case "help":
+			displayUsageGeneric()
+
+		case "list":
+			listHandler(filter, rargs[1:])
+
+		case "search":
+			searchHandler(filter, rargs[1:])
+					
 		case "tags":
-			tagsHandler(os.Args[2:])
+			tagsHandler(filter, rargs[1:])
 
 /* 		case "read":
 			readHandler()
 
 		case "delete":
-			deleteHandler() */
-
-		case "help":
-			displayUsageGeneric()
+			deleteHandler(filter, rargs[1:]) */
 		
 		case "version":
-			fmt.Println(`Notemanager Version 0.15
+			fmt.Println(`Notemanager Version 0.40.1-alpha
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
 		default:
 			noteHandler()
 	}
+
+	// runtime ended properly, so exit with code 0.
+	// this is necessary as we deferred os.Exit(1) initially,
+	// so runtime.Goexit() returns a proper exit code.
+	os.Exit(0)
 }
 
 func displayUsageGeneric() {
-	fmt.Println(`Notemanager Usage:
+	fmt.Println(`Notemanager Usage
+
+note add [PARAMETERS]
+note [FILTER] list|tags|search [PARAMETERS] [ARGUMENT]
+note ID delete|edit|file|help|modify|read|print|versions [PARAMETERS]
+
+For specific usage use -h in PARAMETERS.
 	
-Generic usage:
+
+Generic Details
 ---
-note add [ +TAG .. ] TITLE
-	Add note
-note help
-	Display usage
-note list [ OPTIONS ] [ FILTER ]
-	List notes which match filter
-	Options:
-		-a		List all notes, include deleted
+note add [PARAMETERS] [TAGS] TITLE
+    Add note
+    PARAMETERS:
+        -h  Display help
+        -t TEMPLATE
+            Use TEMPLATE for note creation
+note [FILTER] list [PARAMETERS] [notes|templates]
+    List notes matching FILTER
+    OPPARAMETERSTIONS:
+        -a  List all notes, include deleted
+        -h  Display help
+note [FILTER] tags [PARAMETERS]
+    List notes matching FILTER
+    PARAMETERS:
+        -f  Display notes along with tags
+        -h  Display help
+        -o count|name
+            Order tags by parameter. [Default: count]
+note [FILTER] search [PARAMETERS] REGEXP
+    Search for regular expression in notes matching FILTER 
+    PARAMETERS:
+        -s  Perform case sensitive pattern matching
 note version
-	Display version
+    Display version
 
 
-Note specific usage:
+Note Specific Details
 ---
-note ID [ read ]
-	Read note with pagination
-note ID print
-	Print note
 note ID delete
-	Mark note as deleted
+    Mark note as deleted
+note ID edit [VERSION]
+    Create a new note version based on version. If version is not supplied, a copy of latest version is created.
+note ID file { add | browse | list }
+note ID modify [TAGMODIFIERS...] [TITLE]
+    Modify note tags and title
+note ID [read]
+    Read note with pagination
+note ID print
+    Print note
+note ID versions
+    Print the note's versions
+
 `)
 }
 

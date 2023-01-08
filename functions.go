@@ -9,6 +9,7 @@ import (
 	"strings"
 	"os/exec"
 	"os"
+	"runtime"
 	"sort"
 	"golang.org/x/exp/slices"
 	"github.com/google/uuid"
@@ -297,4 +298,9 @@ func sortNotes(notes []Note) (ret []Note, err error) {
 	}
 
 	return
+}
+
+func Exit(msg string) {
+	fmt.Fprintf(os.Stderr, "%s\n", msg)
+	runtime.Goexit()
 }

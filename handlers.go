@@ -10,10 +10,12 @@ import (
 	"os/exec"
 	"time"
 	"flag"
+	"bufio"
 	"sort"
 	_"golang.org/x/exp/slices"
 	"github.com/google/uuid"
 	"strings"
+	"regexp"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -312,19 +314,17 @@ func noteVersionsHandler(n Note, args []string) (err error) {
 }
 
 // display collection of tags
-func tagsHandler(args []string) (err error) {
+func tagsHandler(filter NoteFilter, args []string) (err error) {
 	fs := flag.NewFlagSet("tags", flag.ContinueOnError)
 	order := fs.String("o", "count", "Ordering of tags. OPTIONS=count|name")
 	fullOutput := fs.Bool("f", false, "Display notes along with tags")
-	//displayHelp := fs.Bool("h", false, "Display Help")
-	//fmt.Sprintf("%v", *displayHelp)
 	if err = fs.Parse(os.Args[2:]); err != nil {
 		return
 	}
 
 	args = fs.Args()
-	filter, rargs, err := parseFilter(args)
-	fmt.Sprintln(rargs)
+	/* filter, rargs, err := parseFilter(args)
+	fmt.Sprintln(rargs) */
 	notes, err := notes(filter)
 	if err != nil {
 		log.Fatal(err)
@@ -368,6 +368,68 @@ func tagsHandler(args []string) (err error) {
 			}
 			fmt.Println()
 		}
+	}
+
+	return
+}
+
+func searchHandler(filter NoteFilter, args []string) (err error) {
+	if len(args) == 0 {
+		Exit("Display help: note search")
+	}
+	fs := flag.NewFlagSet("notemanager search", flag.ContinueOnError)
+	optCaseSensitive := fs.Bool("s", false, "Perform case sensitive search")
+	if err = fs.Parse(args); err != nil {
+		return
+	}
+
+	rargs := fs.Args()
+	notes, err := notes(filter)
+
+	if len(rargs) > 1 {
+		Exit("Too many arguments")
+	}
+	needle := rargs[0]
+
+	var matches []string
+	for _, n := range notes {
+		// search case insensitive by default
+		//matchString := `(?im)(^.*%s.*$)`
+		matchString := `(?im)(%s)`
+		if *optCaseSensitive {
+			matchString = `(?m)(^.*%s.*$)`
+		}
+		
+		r := regexp.MustCompile(fmt.Sprintf(matchString, needle))
+		if r.Match(n.latestContent) {
+			var lines []string
+			sc := bufio.NewScanner(strings.NewReader(string(n.latestContent)))
+			for sc.Scan() {
+				lines = append(lines, sc.Text())
+			}
+
+			for i, line := range lines {
+				if r.MatchString(line) {
+					matches = append(matches, fmt.Sprintf(`%s at line %d`, n.Id.String(), i+1))
+				}
+			}
+
+			/* matches := r.FindSubmatch(n.latestContent)
+			for _, v := range matches {
+				fmt.Printf("Match: %s\n", v)
+			} */
+		}
+	}
+	fmt.Println("Search Results for pattern: " + needle)
+	fmt.Println("Matches found:", len(matches))
+
+	if len(matches) > 0 {
+		fmt.Println()
+		fmt.Println(`Matches:`)
+	}
+
+	for _, m := range matches {
+		fmt.Printf(" - %s\n", m)
 	}
 
 	return
