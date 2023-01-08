@@ -44,6 +44,7 @@ type NoteFilter struct {
 	IncludeDeleted bool
 	IsDeleted bool
 	HasFile bool
+	Notes []string
 }
 
 
@@ -273,6 +274,13 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 			}
 		}
 		if exists == true {
+			ret = false
+			return
+		}
+	}
+
+	if len(filter.Notes) > 0 {
+		if slices.Contains(filter.Notes, n.Id.String()) == false {
 			ret = false
 			return
 		}

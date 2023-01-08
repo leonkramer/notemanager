@@ -87,6 +87,43 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 				continue
 			}
 		}
+		
+		// try Note ID
+		if len(v) == 36 {
+			if _, err := uuid.Parse(v); err != nil {
+				Exit("Invalid UUID syntax: " + v)
+			}
+
+			n, err := loadNote(v)
+			if err != nil {
+				Exit(err.Error())
+			}
+
+			filter.Notes = append(filter.Notes, n.Id.String())
+			continue
+			continue
+		}
+
+		// try short Note ID
+		if len(v) == 8 {
+			// match -somestring tag
+			if isUuidAbbr(v) == false {
+				break
+			}
+
+			id, err := uuidByAbbr(v)
+			if err != nil {
+				Exit(`No such note: ` + v)
+			}
+
+			n, err := loadNote(id.String())
+			if err != nil {
+				Exit(err.Error())
+			}
+			filter.Notes = append(filter.Notes, n.Id.String())
+			continue
+		}
+
 		rargs = args[k:]
 		return
 	}
