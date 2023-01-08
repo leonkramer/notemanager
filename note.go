@@ -22,7 +22,7 @@ import (
 func uuidByAbbr(x string) (r uuid.UUID, err error) {
 	if isUuidAbbr(x) == false {
 		//err = errors.New("%s: No such note id")
-		err = fmt.Errorf("%s: No such note id", r.String())
+		err = fmt.Errorf(`No such note: %s`, r.String())
 		return
 	}
 	
