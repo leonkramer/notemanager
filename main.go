@@ -20,10 +20,26 @@ var cfg *conf.Config
 var notemanager Config
 
 func main() {
-	// disable timestamp
+	// disable timestamp in Fatal Logs
 	log.SetFlags(0)
+
+	// return exit code 1 for runtime.Goexit() function
+	// used in func Exit(string)
+	defer os.Exit(1)
 	
 	notemanager = parseConfig()
+
+	if len(os.Args) == 1 {
+		Exit("Missing arguments")
+	}
+
+	filter, rargs, err := parseFilter(os.Args[1:])
+	if err != nil {
+		Exit(`Failed to parse arguments`)
+	}
+	if len(rargs) == 0 {
+		Exit("Missing arguments")
+	}
 
 	switch os.Args[1] {
 		case "list":
@@ -35,6 +51,9 @@ func main() {
 		case "tags":
 			tagsHandler(os.Args[2:])
 
+		case "search":
+			searchHandler(filter, rargs[1:])
+
 /* 		case "read":
 			readHandler()
 
@@ -45,12 +64,17 @@ func main() {
 			displayUsageGeneric()
 		
 		case "version":
-			fmt.Println(`Notemanager Version 0.15
+			fmt.Println(`Notemanager Version 0.35.1-alpha
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
 		default:
 			noteHandler()
 	}
+
+	// runtime ended properly, so exit with code 0.
+	// this is necessary as we deferred os.Exit(1) initially,
+	// so runtime.Goexit() returns a proper exit code.
+	os.Exit(0)
 }
 
 func displayUsageGeneric() {
