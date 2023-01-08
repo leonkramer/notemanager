@@ -13,41 +13,23 @@ import (
 	"github.com/google/uuid"
 )
 
-func listHandler(args []string) {
+func listHandler(filter NoteFilter, args []string) {
 	fs := flag.NewFlagSet("note list", flag.ContinueOnError)
-	optionAll := fs.Bool("a", false, "Show all notes, include deleted")
-	if err := fs.Parse(os.Args[2:]); err != nil {
+	optAll := fs.Bool("a", false, "Show all notes, include deleted")
+	if err := fs.Parse(args); err != nil {
 		return
 	}
 
-	var filter NoteFilter
-
-	filter.IncludeDeleted = *optionAll
-
-	RESTART:
-	for k, v := range args {
-		if v[0] == '+' {
-			filter.TagsInclude = append(filter.TagsInclude, v[1:])
-			// copy last element to current
-			args[k] = args[len(args)-1]
-			// remove last element
-			args = args[:len(args)-1]
-			goto RESTART
-		}
-
-		if v[0] == '-' {
-			filter.TagsExclude = append(filter.TagsExclude, v[1:])
-			args[k] = args[len(args)-1]
-			args = args[:len(args)-1]
-			goto RESTART
-		}
+	rargs := fs.Args()
+	if *optAll {
+		filter.IncludeDeleted = true
 	}
 
-	if (len(args) == 0) {
-		args = []string{"notes"}
+	if (len(rargs) == 0) {
+		rargs = []string{"notes"}
 	}
 
-	switch args[0] {
+	switch rargs[0] {
 		case "templates":
 			listTemplates(notemanager.TemplateDir)
 

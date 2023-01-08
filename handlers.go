@@ -314,19 +314,17 @@ func noteVersionsHandler(n Note, args []string) (err error) {
 }
 
 // display collection of tags
-func tagsHandler(args []string) (err error) {
+func tagsHandler(filter NoteFilter, args []string) (err error) {
 	fs := flag.NewFlagSet("tags", flag.ContinueOnError)
 	order := fs.String("o", "count", "Ordering of tags. OPTIONS=count|name")
 	fullOutput := fs.Bool("f", false, "Display notes along with tags")
-	//displayHelp := fs.Bool("h", false, "Display Help")
-	//fmt.Sprintf("%v", *displayHelp)
 	if err = fs.Parse(os.Args[2:]); err != nil {
 		return
 	}
 
 	args = fs.Args()
-	filter, rargs, err := parseFilter(args)
-	fmt.Sprintln(rargs)
+	/* filter, rargs, err := parseFilter(args)
+	fmt.Sprintln(rargs) */
 	notes, err := notes(filter)
 	if err != nil {
 		log.Fatal(err)
@@ -380,10 +378,7 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 		Exit("Display help: note search")
 	}
 	fs := flag.NewFlagSet("notemanager search", flag.ContinueOnError)
-	//order := fs.String("i", "count", "Ordering of tags. OPTIONS=count|name")
 	optCaseSensitive := fs.Bool("s", false, "Perform case sensitive search")
-	//displayHelp := fs.Bool("h", false, "Display Help")
-	//fmt.Sprintf("%v", *displayHelp)
 	if err = fs.Parse(args); err != nil {
 		return
 	}
