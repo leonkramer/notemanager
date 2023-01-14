@@ -42,7 +42,6 @@ func main() {
 
 	if len(rargs) == 0 {
 		rargs = []string{"help"}
-		//Exit("Missing arguments")
 	}
 
 	switch rargs[0] {
@@ -50,7 +49,7 @@ func main() {
 			addHandler()
 
 		case "help":
-			displayUsageGeneric()
+			helpNote()
 
 		case "list":
 			listHandler(filter, rargs[1:])
@@ -60,6 +59,9 @@ func main() {
 					
 		case "tags":
 			tagsHandler(filter, rargs[1:])
+		
+		case "--filter-help":
+			log.Fatal(helpFilter());
 
 /* 		case "read":
 			readHandler()
@@ -81,62 +83,6 @@ Author: Leon Kramer <leonkramer@gmail.com>`)
 	os.Exit(0)
 }
 
-func displayUsageGeneric() {
-	fmt.Println(`Notemanager Usage
-
-note add [PARAMETERS]
-note [FILTER] list|tags|search [PARAMETERS] [ARGUMENT]
-note ID delete|edit|file|help|modify|read|print|versions [PARAMETERS]
-
-For specific usage use -h in PARAMETERS.
-	
-
-Generic Details
----
-note add [PARAMETERS] [TAGS] TITLE
-    Add note
-    PARAMETERS:
-        -h  Display help
-        -t TEMPLATE
-            Use TEMPLATE for note creation
-note [FILTER] list [PARAMETERS] [notes|templates]
-    List notes matching FILTER
-    OPPARAMETERSTIONS:
-        -a  List all notes, include deleted
-        -h  Display help
-note [FILTER] tags [PARAMETERS]
-    List notes matching FILTER
-    PARAMETERS:
-        -f  Display notes along with tags
-        -h  Display help
-        -o count|name
-            Order tags by parameter. [Default: count]
-note [FILTER] search [PARAMETERS] REGEXP
-    Search for regular expression in notes matching FILTER 
-    PARAMETERS:
-        -s  Perform case sensitive pattern matching
-note version
-    Display version
-
-
-Note Specific Details
----
-note ID delete
-    Mark note as deleted
-note ID edit [VERSION]
-    Create a new note version based on version. If version is not supplied, a copy of latest version is created.
-note ID file { add | browse | list }
-note ID modify [TAGMODIFIERS...] [TITLE]
-    Modify note tags and title
-note ID [read]
-    Read note with pagination
-note ID print
-    Print note
-note ID versions
-    Print the note's versions
-
-`)
-}
 
 // moves temporary note from tempDir to specific note directory inside noteDir
 func moveFile(id string, version string) (err error) {

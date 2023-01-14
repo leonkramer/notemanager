@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"github.com/gosimple/conf"
+	"golang.org/x/term"
 )
 
 func parseConfig() (c Config) {
@@ -110,4 +111,9 @@ func runFileManager(path string) {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
 		return
 	}
+}
+
+func terminalWidth() (width int) {
+	width, _, _ = term.GetSize(0)
+	return
 }

@@ -52,8 +52,7 @@ func addNote() (err error) {
 
 	// -h flag given
 	if *displayHelp {
-		displayUsageAdd(*fs)
-		return
+		helpNoteAdd()
 	}
 	// user needs help
 	if fs.NArg() == 1 && fs.Arg(0) == "help" {
@@ -76,12 +75,12 @@ func addNote() (err error) {
 	file := filepath.Clean(fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, id.String()))
 	
 	// Replace placeholders
-	in = bytes.ReplaceAll(in, []byte("{{ nmId }}"), []byte(id.String()))
-	in = bytes.ReplaceAll(in, []byte("{{ nmDate }}"), []byte(timestamp.Format("2006-01-02")))
-	in = bytes.ReplaceAll(in, []byte("{{ nmTime }}"), []byte(timestamp.Format("15:04")))
-	in = bytes.ReplaceAll(in, []byte("{{ nmTimeOffset }}"), []byte(timestamp.Format("-07:00")))
-	in = bytes.ReplaceAll(in, []byte("{{ nmTitle }}"), []byte(title))
-	in = bytes.ReplaceAll(in, []byte("{{ nmTags }}"), []byte(strings.Join(tags, ",")))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.id }}"), []byte(id.String()))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.created.date }}"), []byte(timestamp.Format("2006-01-02")))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.created.time }}"), []byte(timestamp.Format("15:04")))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.created.offset }}"), []byte(timestamp.Format("-07:00")))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.title }}"), []byte(title))
+	in = bytes.ReplaceAll(in, []byte("{{ nm.tags }}"), []byte(strings.Join(tags, ",")))
 
 	// Create a file in temporary dir.
 	// Once the note editor has been closed check if timestamp 

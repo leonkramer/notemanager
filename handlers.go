@@ -67,11 +67,22 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 }
 
 func noteFileHandler(note Note, args []string) (err error) {
+	fs := flag.NewFlagSet("note file", flag.ContinueOnError)
+	optHelp := fs.Bool("h", false, "Display usage")
+	if err = fs.Parse(args); err != nil {
+		return
+	}
+
+	if *optHelp {
+		helpNoteFile()
+	}
+
 	var action string
 	action = "list"
 	if len(args) > 0 {
 		action = args[0]
 	}
+	
 	
 	switch action {
 		case "list":
@@ -318,8 +329,13 @@ func tagsHandler(filter NoteFilter, args []string) (err error) {
 	fs := flag.NewFlagSet("tags", flag.ContinueOnError)
 	order := fs.String("o", "count", "Ordering of tags. OPTIONS=count|name")
 	fullOutput := fs.Bool("f", false, "Display notes along with tags")
+	optHelp := fs.Bool("h", false, "Display usage")
 	if err = fs.Parse(os.Args[2:]); err != nil {
 		return
+	}
+
+	if *optHelp {
+		helpNoteTags()
 	}
 
 	args = fs.Args()
@@ -379,8 +395,13 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 	}
 	fs := flag.NewFlagSet("notemanager search", flag.ContinueOnError)
 	optCaseSensitive := fs.Bool("s", false, "Perform case sensitive search")
+	optHelp := fs.Bool("h", false, "Display usage")
 	if err = fs.Parse(args); err != nil {
 		return
+	}
+
+	if *optHelp {
+		helpNoteSearch()
 	}
 
 	rargs := fs.Args()
