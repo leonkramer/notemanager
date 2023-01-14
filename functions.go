@@ -341,3 +341,67 @@ func Exit(msg string) {
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
 	runtime.Goexit()
 }
+
+
+// Convert long texts into a better human readable
+// format. I.e. long lines will be auto broken into max 72 chars
+// or the terminal width, whatever is smaller.
+func Autobreak(x string) (ret string) {
+	var lines []string
+	var width int
+	width = terminalWidth()
+	
+	if width > 72 {
+		width = 72
+	}
+
+
+	//x = strings.Replace(x, "\t", "    ", -1)
+	
+	// keep the already defined new lines, therefore create
+	// slice of lines.
+	for _, l := range strings.Split(x, "\n") {
+		// work = our line to work with
+		work := l
+
+		// if the line is prefixed by a space or tab, read this
+		// prefix into a variable, so we can later prefix
+		// every broken line with it.
+		var prefix string
+		for _, c := range work {
+			if c == ' ' || c == '\t' {
+				prefix += string(c)
+				continue
+			}
+			break
+		}
+
+		work = work[len(prefix):]
+
+		splitPos := width - len(prefix)
+/* 		fmt.Println("work=", work)
+		fmt.Println("splitPos=", splitPos) */
+	
+		for len(work) > splitPos  {
+			index := strings.LastIndex(work[0:splitPos], ` `)
+			if index == -1 {
+				lines = append(lines, prefix + work)
+				work = ``
+			} else {
+		/* 	fmt.Println("index=", index)
+			fmt.Println("width=", width) */
+				lines = append(lines, prefix + work[:index])
+				work = work[index+1:]
+			}			
+			
+		}
+		lines = append(lines, prefix + work)
+		continue
+	}
+
+
+	for _, line := range lines {
+		ret += line + "\n"
+	}
+	return
+}

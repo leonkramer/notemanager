@@ -16,8 +16,13 @@ import (
 func listHandler(filter NoteFilter, args []string) {
 	fs := flag.NewFlagSet("note list", flag.ContinueOnError)
 	optAll := fs.Bool("a", false, "Show all notes, include deleted")
+	optHelp := fs.Bool("h", false, "Display usage")
 	if err := fs.Parse(args); err != nil {
 		return
+	}
+
+	if *optHelp {
+		helpNoteList()
 	}
 
 	rargs := fs.Args()
@@ -37,7 +42,7 @@ func listHandler(filter NoteFilter, args []string) {
 			listNotes(filter)
 
 		default:
-			fmt.Println("default")
+			helpNoteList()
 	}
 }
 
@@ -54,7 +59,6 @@ func listTemplates(path string) {
 	  }
 	  fmt.Printf("   %s (%d Bytes, modified: %s)\n", file.Name(), info.Size(), info.ModTime())
 	}
-	//fmt.Println(files)
 	return
 }
 
