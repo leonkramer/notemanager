@@ -117,3 +117,8 @@ func runFileManager(path string) {
 		return
 	}
 }
+
+func terminalWidth() (width int) {
+	width, _, _ = term.GetSize(0)
+	return
+}

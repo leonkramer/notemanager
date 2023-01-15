@@ -74,7 +74,8 @@ ARGUMENTS
     FILTER
         For explanation of filters run: ./note -h
     OPTIONS
-        -s  Perform case sensitive pattern matching
+        -s|--case-sensitive
+            Perform case sensitive pattern matching
     REGEXP
         Regular Expression to search for
 `
@@ -86,7 +87,7 @@ ARGUMENTS
 func helpFilter() (x string) {
     x = `FILTER
     DESCRIPTION
-        FILTER is a collection of options and terms or just a list of specific note ids to built a selection of notes. All supplied filter terms must match in order for a note to be included in the note selection.
+        FILTER is a collection of options and terms or just a list of specific note ids to built a selection of notes. All supplied filter terms must match in order for a note to be included in the note selection. By default deleted notes are excluded from the note selection.
 
 
     SYNTAX
@@ -95,18 +96,27 @@ func helpFilter() (x string) {
 
     ARGUMENTS
         OPTIONS
-            -a  Display all notes, include deleted notes
+            -a|--all
+                Select all notes, include deleted notes
+            -h|--help   
+                Display Notemanager Usage
 
 
         TERMS
             Filter notes based on supplied terms. All terms must match. Multiple terms must be separated by white space.
     
-            created.after:TIMESTAMP     Notes created after date
-            created.before:TIMESTAMP    Notes created before date
-            modified.after:TIMESTAMP    Notes modified after date
-            modified.before:TIMESTAMP   Notes modified before date
-            +string                     Notes with tag string
-            -string                     Notes without tag string
+            created.after:TIMESTAMP
+                Notes created after date
+            created.before:TIMESTAMP
+                Notes created before date
+            modified.after:TIMESTAMP
+                Notes modified after date
+            modified.before:TIMESTAMP
+                Notes modified before date
+            +string
+                Notes with tag string
+            -string
+                Notes without tag string
     
     
             TIMESTAMP:
@@ -137,9 +147,11 @@ ARGUMENTS
     FILTER
         For explanation of filters run: ./note -h
     OPTIONS
-        -f  Display notes along with tags
-        -h  Display help
-        -o count|name
+        -f|--full
+            Display notes along with tags
+        -h|--help
+            Display usage
+        -o|--order count|name
             Order tags by a parameter. [Default: count]
 
 `

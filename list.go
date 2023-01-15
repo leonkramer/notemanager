@@ -14,19 +14,23 @@ import (
 )
 
 func listHandler(filter NoteFilter, args []string) {
+	var optHelp bool
+	var optAll bool
 	fs := flag.NewFlagSet("note list", flag.ContinueOnError)
-	optAll := fs.Bool("a", false, "Show all notes, include deleted")
-	optHelp := fs.Bool("h", false, "Display usage")
+	fs.BoolVar(&optHelp, "h", false, "Display usage")
+	fs.BoolVar(&optHelp, "help", false, "Display usage")
+	fs.BoolVar(&optAll, "a", false, "Show all notes, include deleted")
+	fs.BoolVar(&optAll, "all", false, "Show all notes, include deleted")
 	if err := fs.Parse(args); err != nil {
 		return
 	}
 
-	if *optHelp {
+	if optHelp {
 		helpNoteList()
 	}
 
 	rargs := fs.Args()
-	if *optAll {
+	if optAll {
 		filter.IncludeDeleted = true
 	}
 
