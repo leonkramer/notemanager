@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"path/filepath"
+	"bytes"
 	"flag"
+	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"os"
-	"time"
-	"bytes"
-	"strings"
 	"os/exec"
-	"github.com/google/uuid"
-
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 func addHandler(args []string) {

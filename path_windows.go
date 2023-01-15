@@ -3,14 +3,14 @@
 package main
 
 import (
-	"os"
-	"log"
 	"bytes"
-	"os/exec"
 	"fmt"
-	"path/filepath"
 	"github.com/gosimple/conf"
 	"golang.org/x/term"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 
