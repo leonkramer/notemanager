@@ -1,21 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"errors"
-	"os"
-	"path/filepath"
-	"log"
-	"bytes"
-	"os/exec"
-	"time"
-	"flag"
 	"bufio"
-	"sort"
-	_"golang.org/x/exp/slices"
+	"bytes"
+	"errors"
+	"flag"
+	"fmt"
 	"github.com/google/uuid"
-	"strings"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
+	"sort"
+	"strings"
+	"time"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -463,6 +462,49 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 
 	for _, m := range matches {
 		fmt.Printf(" - %s\n", m)
+	}
+
+	return
+}
+
+func undeleteHandler(notes []Note, args []string) (err error) {
+	for _, n := range notes {
+		err = n.Undelete()
+		if err != nil {
+			return
+		}
+
+		fmt.Printf("%s: Undeleted\n", n.ShortId())
+	}
+
+	return
+}
+
+func deleteHandler(notes []Note, args []string) (err error) {
+	for _, n := range notes {
+		err = n.Delete()
+		if err != nil {
+			return
+		}
+		
+		fmt.Printf("%s: Deleted\n", n.ShortId())
+	}
+
+	return
+}
+
+func printHandler(notes []Note, args []string) (err error) {
+	for _, n := range notes {
+		notePrintHandler(n, args)
+	}
+
+	return
+}
+
+func readHandler(notes []Note, args []string) (err error) {
+	for _, n := range notes {
+		//version := n.LatestVersion()
+		noteReadHandler(n, args)
 	}
 
 	return

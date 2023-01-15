@@ -3,14 +3,14 @@
 package main
 
 import (
-	"os"
-	"log"
-	"os/exec"
 	"bytes"
 	"fmt"
-	"path/filepath"
 	"github.com/gosimple/conf"
 	"golang.org/x/term"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 func parseConfig() (c Config) {

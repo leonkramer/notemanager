@@ -1,16 +1,16 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"log"
-	"flag"
-	"regexp"
 	"errors"
-	"strings"
-	"sort"
-	"path/filepath"
+	"flag"
+	"fmt"
 	"github.com/google/uuid"
+	"log"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 )
 
 func listHandler(filter NoteFilter, args []string) {

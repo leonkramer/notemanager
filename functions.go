@@ -1,23 +1,30 @@
 package main
 
 import (
-	"time"
-	"fmt"
-	"log"
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
-	"regexp"
-	"strings"
-	"os/exec"
+	"fmt"
+	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
+	"io"
+	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
-	"golang.org/x/exp/slices"
-	"github.com/google/uuid"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // parse Command for FILTER arguments.
 // i.e. +tag, -tag, created.after, created.before, 
-// modified.after, modified.before
+// modified.after, modified.before etc.
 func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 	for k, v := range args {
 		// match +somestring tag
@@ -101,16 +108,10 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 
 			filter.Notes = append(filter.Notes, n.Id.String())
 			continue
-			continue
 		}
 
 		// try short Note ID
-		if len(v) == 8 {
-			// match -somestring tag
-			if isUuidAbbr(v) == false {
-				break
-			}
-
+		if isUuidAbbr(v) {
 			id, err := uuidByAbbr(v)
 			if err != nil {
 				Exit(`No such note: ` + v)
@@ -125,7 +126,24 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 		}
 
 		rargs = args[k:]
-		return
+		break;
+	}
+
+	// check if note ids and other filters are supplied.
+	// that makes not a lot of sense and should fail
+	// so client does not get unexpected results.
+	if len(filter.Notes) > 0 {
+		// assume to include deleted notes, if specific
+		// note ids are supplied
+		filter.IncludeDeleted = true
+		
+		cmp :=  NoteFilter{
+			Notes: filter.Notes,
+			IncludeDeleted: filter.IncludeDeleted,
+		}
+		if reflect.DeepEqual(filter, cmp) == false {
+			Exit("Note IDs and filter terms supplied, but they are mutually exclusive")
+		}
 	}
 	
 	return
@@ -379,8 +397,6 @@ func Autobreak(x string) (ret string) {
 		work = work[len(prefix):]
 
 		splitPos := width - len(prefix)
-/* 		fmt.Println("work=", work)
-		fmt.Println("splitPos=", splitPos) */
 	
 		for len(work) > splitPos  {
 			index := strings.LastIndex(work[0:splitPos], ` `)
@@ -388,8 +404,6 @@ func Autobreak(x string) (ret string) {
 				lines = append(lines, prefix + work)
 				work = ``
 			} else {
-		/* 	fmt.Println("index=", index)
-			fmt.Println("width=", width) */
 				lines = append(lines, prefix + work[:index])
 				work = work[index+1:]
 			}			
@@ -405,3 +419,77 @@ func Autobreak(x string) (ret string) {
 	}
 	return
 }
+
+
+// moves temporary note from tempDir to specific note directory inside noteDir
+func moveFile(id string, version string) (err error) {
+	oldFile := filepath.Clean(fmt.Sprintf("%s/%s", notemanager.TempDir, id))
+	newFile := filepath.Clean(fmt.Sprintf("%s/%s/%s", notemanager.NoteDir, id, version))
+
+	os.Mkdir(filepath.Clean(fmt.Sprintf("%s/%s", notemanager.NoteDir, id)), notemanager.DirPermission)
+	err = os.Rename(oldFile, newFile)
+
+	return
+}
+
+func readMetadataFile(id string) (metadata Metadata, err error) {
+	metadataRaw, err := os.ReadFile(filepath.Clean(notemanager.NoteDir + "/" + id + "/meta"))
+	if err != nil {
+		return
+	}
+
+	err = yaml.Unmarshal(metadataRaw, &metadata)
+	return metadata, err
+}
+
+
+func noteId(file string) []byte {
+	body, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	rUuid := regexp.MustCompile(`(?m)^\-\-\-$[\d\D]+^Id: (?P<uuid>[a-z0-9\-]+)$[\d\D]+^\-\-\-$`)
+	rVersion := regexp.MustCompile(`(?m)^\-\-\-$[\d\D]+^Version: (?P<version>[0-9]+)$[\d\D]+^\-\-\-$`)
+	if rUuid.Match(body) && rVersion.Match(body) {
+		matches := rUuid.FindSubmatch(body)
+		uuid := matches[rUuid.SubexpIndex("uuid")]
+		matches = rVersion.FindSubmatch(body)
+		version := matches[rVersion.SubexpIndex("version")]
+		versionNew, err := strconv.Atoi(string(version))
+		versionNew += 1
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Uuid: %s", uuid)
+		fmt.Printf("Version: %s", version)
+		fmt.Println("VersionNew: ", versionNew)
+		datadir, _ := cfg.String("default", "datadir")
+		dstDir := fmt.Sprintf("%s/%s", datadir, uuid)
+		os.MkdirAll(dstDir, 0655)
+		if _, err := os.Stat(dstDir); os.IsNotExist(err) {
+			fmt.Println("directory does not exist")
+		}
+	}
+	
+	return body
+}
+
+
+// generate sha1 hash from file
+func fileSha1(path string) (ret string, err error) {
+	fh, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer fh.Close()
+
+	hash := sha1.New()
+	_, err = io.Copy(hash, fh)
+	if err != nil {
+		return
+	}
+	hashInBytes := hash.Sum(nil)[:20]
+	ret = hex.EncodeToString(hashInBytes)
+	return
+}
+
