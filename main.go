@@ -68,7 +68,7 @@ func main() {
 
 	switch rargs[0] {
 		case "add":
-			addHandler()
+			addHandler(rargs[1:])
 
 		case "list":
 			listHandler(filter, rargs[1:])

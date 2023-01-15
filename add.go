@@ -14,8 +14,8 @@ import (
 
 )
 
-func addHandler() {
-	err := addNote()
+func addHandler(args []string) {
+	err := addNote(args)
 	if (err != nil) {
 		log.Fatal(err)
 	}
@@ -26,47 +26,55 @@ func displayUsageAdd(fs flag.FlagSet) {
 	fs.PrintDefaults()
 }
 
-func addNote() (err error) {
-	var args []string
+func addNote(args []string) (err error) {
 	var tags []string
 
-	fs := flag.NewFlagSet("add", flag.ContinueOnError)
-	template := fs.String("t", "note", "Template of note")
-	displayHelp := fs.Bool("h", false, "Display Help")
-	if err = fs.Parse(os.Args[2:]); err != nil {
+	var optHelp bool
+	var optTemplate string
+	fs := flag.NewFlagSet("note add", flag.ContinueOnError)
+	fs.Usage = func() { helpNoteAdd() }
+	fs.BoolVar(&optHelp, "h", false, "Display Help")
+	fs.BoolVar(&optHelp, "help", false, "Display Help")
+	fs.StringVar(&optTemplate, "t", "note", "Template of note")
+	fs.StringVar(&optTemplate, "template", "note", "Template of note")
+	if err = fs.Parse(args); err != nil {
 		return
 	}
 
-	args = fs.Args()
-	for k, arg := range args {
+	rargs := fs.Args()
+	for k, arg := range rargs {
 		// Arguments prefixed by + are tags
 		if arg[0] == '+' {
 			tags = append(tags, arg[1:])
+			rargs = args[k+1:]
 			continue
 		}
-		args = args[k:]
+		//rargs = args[k:]
 		break
 	}
-	// Everything else is the title
-	title := strings.Join(args, " ")
+
+	title := "Undefined"
+	if len(rargs) > 0 {
+		// Everything else is the title
+		title = strings.Join(rargs, " ")
+	}
 
 	// -h flag given
-	if *displayHelp {
+	if optHelp {
 		helpNoteAdd()
 	}
+
 	// user needs help
 	if fs.NArg() == 1 && fs.Arg(0) == "help" {
-		displayUsageAdd(*fs)
-		return
+		helpNoteAdd()
 	}
 	// Note title missing
 	if fs.NArg() == 0 {
-		displayUsageAdd(*fs)
-		return
+		helpNoteAdd()
 	}
 
 
-	in, err := os.ReadFile(filepath.Clean(notemanager.TemplateDir + "/" + *template))
+	in, err := os.ReadFile(filepath.Clean(notemanager.TemplateDir + "/" + optTemplate))
 	if err != nil {
 		in = []byte{}
 	}

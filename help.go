@@ -161,7 +161,7 @@ ARGUMENTS
 
 func helpNoteAdd() {
     x := `USAGE
-    ./note add [TAG...] TITLE
+    ./note add [OPTIONS] [TAG...] [TITLE]
 
 
 DESCRIPTION
@@ -169,10 +169,13 @@ DESCRIPTION
 
 
 ARGUMENTS
+    OPTIONS
+        -t|--template
+            Use template file as note layout. [Default=note]
     TAG
         Tags are strings prefixed by a '+' sign. Multiple tags can be supplied by separating them by spaces.
     TITLE
-        All remaining arguments after TAG build the note's title. You usually do not need to wrap the title in quotes, unless you want to keep white spaces for some reason.
+        All remaining arguments after TAG build the note's title. You usually do not need to wrap the title in quotes, unless you want to keep white spaces for some reason. [Default=Undefined]
 
 
 EXAMPLE
