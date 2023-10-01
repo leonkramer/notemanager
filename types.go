@@ -3,86 +3,75 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
 )
 
-
 type Note struct {
-	Id 	uuid.UUID `yaml:"id"`
-	Title string `yaml:"title"`
-	Attachments []Attachment `yaml:"attachments,omitempty"`
-	Versions []string `yaml:"versions"`
-	Tags []string `yaml:"tags,omitempty"`
-	DateCreated time.Time `yaml:"created"`
-	DateModified []time.Time `yaml:"modified,omitempty"`
-	DateDeleted time.Time `yaml:"deleted,omitempty"`
+	Id            uuid.UUID    `yaml:"id"`
+	Title         string       `yaml:"title"`
+	Attachments   []Attachment `yaml:"attachments,omitempty"`
+	Versions      []string     `yaml:"versions"`
+	Tags          []string     `yaml:"tags,omitempty"`
+	VirtualTags   []string     `yaml:"-"`
+	DateCreated   time.Time    `yaml:"created"`
+	DateModified  []time.Time  `yaml:"modified,omitempty"`
+	DateDeleted   time.Time    `yaml:"deleted,omitempty"`
 	latestContent []byte
-	/*
-	Tags []string
-	Bytes int64 `yaml:"-"`
-	File string
-	Version	uint16
-	Meta Metadata
-	Date time.Time
-	*/
 }
 
 type NoteFilter struct {
-	TagsInclude []string
-	TagsExclude []string
-	CreatedAfter time.Time
-	CreatedBefore time.Time
-	ModifiedAfter time.Time
+	TagsInclude    []string
+	TagsExclude    []string
+	CreatedAfter   time.Time
+	CreatedBefore  time.Time
+	ModifiedAfter  time.Time
 	ModifiedBefore time.Time
 	IncludeDeleted bool
-	IsDeleted bool
-	HasFile bool
-	Notes []string
+	IsDeleted      bool
+	HasFile        bool
+	Notes          []string
 }
-
 
 type Metadata struct {
-	Id 	uuid.UUID `yaml:"id"`
-	Title string `yaml:"title"`
-	Tags []string `yaml:"tags,omitempty"`
-	Attachments []Attachment `yaml:"attachments,omitempty"`
-	Versions []string `yaml:"-"`
-	DateCreated time.Time `yaml:"created"`
-	DateModified []time.Time `yaml:"modified,omitempty"`
-	DateDeleted time.Time `yaml:"deleted,omitempty"`
+	Id           uuid.UUID    `yaml:"id"`
+	Title        string       `yaml:"title"`
+	Tags         []string     `yaml:"tags,omitempty"`
+	Attachments  []Attachment `yaml:"attachments,omitempty"`
+	Versions     []string     `yaml:"-"`
+	DateCreated  time.Time    `yaml:"created"`
+	DateModified []time.Time  `yaml:"modified,omitempty"`
+	DateDeleted  time.Time    `yaml:"deleted,omitempty"`
 }
-
 
 type Config struct {
-	DataDir string
-	Editor string
-	NoteDir string
-	TempDir string
-	TemplateDir string
-	TerminalReader string
-	FileManager string
-	VersionTimeFormat string
-	OutputTimeFormatShort string
-	OutputTimeFormatLong string
-	FilePermission os.FileMode
+	DataDir                string
+	Editor                 string
+	NoteDir                string
+	TempDir                string
+	TemplateDir            string
+	TerminalReader         string
+	FileManager            string
+	VersionTimeFormat      string
+	OutputTimeFormatShort  string
+	OutputTimeFormatLong   string
+	FilePermission         os.FileMode
 	FilePermissionReadonly os.FileMode
-	DirPermission os.FileMode
+	DirPermission          os.FileMode
 }
-
 
 type Attachment struct {
-	Filename string `yaml:"filename"`
-	Sha1 string `yaml:"sha1"` 
+	Filename    string    `yaml:"filename"`
+	Sha1        string    `yaml:"sha1"`
 	DateCreated time.Time `yaml:"dateCreated"`
 }
-
 
 // checks if note exists
 func (n Note) Exists() bool {
@@ -93,17 +82,15 @@ func (n Note) Exists() bool {
 	}
 }
 
-
 // write yaml encoded note struct to data file
 func (n Note) WriteData() (err error) {
-	err = os.WriteFile(filepath.Clean(notemanager.NoteDir + "/" + n.Id.String() + "/data"), n.Yaml(), 0600)
+	err = os.WriteFile(filepath.Clean(notemanager.NoteDir+"/"+n.Id.String()+"/data"), n.Yaml(), 0600)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return
 }
-
 
 // encode note struct to yaml
 func (n Note) Yaml() (encodedYaml []byte) {
@@ -117,7 +104,7 @@ func (n Note) Yaml() (encodedYaml []byte) {
 
 func newNote(noteId string) (n Note, err error) {
 	id, err := uuid.Parse(noteId)
-	if (err != nil) {
+	if err != nil {
 		// check if abbreviated uuid
 		if isUuidAbbr(noteId) == false {
 			err = errors.New("Invalid note syntax")
@@ -142,7 +129,6 @@ func newNote(noteId string) (n Note, err error) {
 	return
 }
 
-// 
 func (n Note) Content(version ...string) (content []byte, err error) {
 	var v string
 
@@ -165,7 +151,7 @@ func (n Note) Content(version ...string) (content []byte, err error) {
 	return
 }
 
-
+// returns a Note struct from a note YAML file
 func loadNote(id string) (n Note, err error) {
 	yml, err := os.ReadFile(filepath.Clean(notemanager.NoteDir + "/" + id + "/data"))
 	if err != nil {
@@ -178,13 +164,53 @@ func loadNote(id string) (n Note, err error) {
 	}
 
 	n.latestContent, err = n.Content()
+
+	// build virtual tags
+	if n.DateCreated.Year() == time.Now().Year() {
+		_, nWeek := n.DateCreated.ISOWeek()
+		_, curWeek := time.Now().ISOWeek()
+
+		n.VirtualTags = append(n.VirtualTags, `YEAR`)
+
+		if n.DateCreated.Month() == time.Now().Month() {
+			n.VirtualTags = append(n.VirtualTags, `MONTH`)
+		}
+
+		if n.DateCreated.YearDay() == time.Now().YearDay() {
+			n.VirtualTags = append(n.VirtualTags, `TODAY`)
+		}
+
+		if n.DateCreated.YearDay()+1 == time.Now().YearDay() {
+			n.VirtualTags = append(n.VirtualTags, `YESTERDAY`)
+		}
+
+		if nWeek == curWeek {
+			n.VirtualTags = append(n.VirtualTags, `WEEK`)
+		}
+	}
+
+	if n.DateDeleted.IsZero() == false {
+		n.VirtualTags = append(n.VirtualTags, `DELETED`)
+	}
+
+	if len(n.DateModified) > 0 {
+		n.VirtualTags = append(n.VirtualTags, `MODIFIED`)
+	}
+
+	if len(n.Tags) > 0 {
+		n.VirtualTags = append(n.VirtualTags, `TAGGED`)
+	}
+
+	if len(n.Attachments) > 0 {
+		n.VirtualTags = append(n.VirtualTags, `FILE`)
+	}
+
 	return
 }
 
-
 // creates text output of note.
 func (n Note) Output(version string) (b []byte) {
-	tpl :=  `+
+	tpl := `+
 + Title:       %s
 + Date:        %s
 +
@@ -195,9 +221,8 @@ func (n Note) Output(version string) (b []byte) {
 
 
 %s
-` 
+`
 
-	
 	content, err := n.Content(version)
 	if err != nil {
 		log.Fatal(err)
@@ -252,7 +277,15 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 	// Must have tags
 	for _, x := range filter.TagsInclude {
 		exists := false
+		// explicit note tags
 		for _, t := range n.Tags {
+			if t == x {
+				exists = true
+				continue
+			}
+		}
+		// virtual note tags
+		for _, t := range n.VirtualTags {
 			if t == x {
 				exists = true
 				continue
@@ -267,7 +300,15 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 	// Must not have tags
 	for _, x := range filter.TagsExclude {
 		exists := false
+		// explicit note tags
 		for _, t := range n.Tags {
+			if t == x {
+				exists = true
+				continue
+			}
+		}
+		// virtual note tags
+		for _, t := range n.VirtualTags {
 			if t == x {
 				exists = true
 				continue
@@ -290,7 +331,6 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 	return
 }
 
-
 // add tags to note. if one of the notes already exist
 // the single tag is skipped, but the other tags are added
 func (n *Note) AddTags(t []string) {
@@ -305,7 +345,7 @@ func (n *Note) AddTags(t []string) {
 // removes tags from note. if one of the notes does not exist
 // the other notes are still removed
 func (n *Note) RemoveTags(t []string) {
-	RESTART:
+RESTART:
 	for k, v := range n.Tags {
 		if slices.Contains(t, v) {
 			n.Tags = slices.Delete(n.Tags, k, k+1)
@@ -325,12 +365,12 @@ func (n *Note) RemoveTag(t string) {
 }
 
 // returns path of note: $NoteDir/$UUID
-func (n Note) Path() (string) {
+func (n Note) Path() string {
 	return filepath.Clean(notemanager.NoteDir + `/` + n.Id.String())
 }
 
 // returns latest version of note
-func (n Note) LatestVersion() (string) {
+func (n Note) LatestVersion() string {
 	return n.Versions[len(n.Versions)-1]
 }
 

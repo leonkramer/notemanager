@@ -4,13 +4,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 func listHandler(filter NoteFilter, args []string) {
@@ -34,19 +35,19 @@ func listHandler(filter NoteFilter, args []string) {
 		filter.IncludeDeleted = true
 	}
 
-	if (len(rargs) == 0) {
+	if len(rargs) == 0 {
 		rargs = []string{"notes"}
 	}
 
 	switch rargs[0] {
-		case "templates":
-			listTemplates(notemanager.TemplateDir)
+	case "templates":
+		listTemplates(notemanager.TemplateDir)
 
-		case "notes":
-			listNotes(filter)
+	case "notes":
+		listNotes(filter)
 
-		default:
-			helpNoteList()
+	default:
+		helpNoteList()
 	}
 }
 
@@ -54,28 +55,27 @@ func listTemplates(path string) {
 	fmt.Println("Note Templates:")
 	files, err := os.ReadDir(path)
 	if err != nil {
-	  log.Fatal(err)
+		log.Fatal(err)
 	}
 	for _, file := range files {
-	  info, err := file.Info()
-	  if err != nil {
-		log.Fatal(err)
-	  }
-	  fmt.Printf("   %s (%d Bytes, modified: %s)\n", file.Name(), info.Size(), info.ModTime())
+		info, err := file.Info()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("   %s (%d Bytes, modified: %s)\n", file.Name(), info.Size(), info.ModTime())
 	}
 	return
 }
 
-
 func listNotes(filter NoteFilter) {
 	files, err := os.ReadDir(notemanager.NoteDir)
 	if err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 
 	var notes []Note
 	for _, file := range files {
-		
+
 		if file.IsDir() == false {
 			continue
 		}
@@ -83,7 +83,7 @@ func listNotes(filter NoteFilter) {
 		noteId := uuid.MustParse(file.Name())
 
 		note, err := loadNote(noteId.String())
-		if (err != nil) {
+		if err != nil {
 			log.Fatal(err)
 		}
 
@@ -94,11 +94,11 @@ func listNotes(filter NoteFilter) {
 		if matches {
 			notes = append(notes, note)
 		}
-		
-        if string(file.Name()[0]) == "." {
-          continue
-        }
-    }
+
+		if string(file.Name()[0]) == "." {
+			continue
+		}
+	}
 
 	// sort notes by DateCreated ASC
 	sort.Slice(notes, func(a int, b int) bool {
@@ -120,22 +120,22 @@ func listNotes(filter NoteFilter) {
 		// one index per note and another per field.
 		// also obtain the maximum length of entry to get a clean table output.
 		for _, n := range notes {
-			// m = 
+			// m =
 			row := make([]string, 0)
 			var s string
-			for j, field := range fields {	
+			for j, field := range fields {
 				switch field {
-					case "id":
-						s = n.ShortId()
-					
-					case "tags":
-						s = strings.Join(n.Tags, ",")
+				case "id":
+					s = n.ShortId()
 
-					case "title":
-						s = n.Title
+				case "tags":
+					s = strings.Join(n.Tags, ",")
 
-					case "created":
-						s = n.DateCreated.Local().Format(notemanager.OutputTimeFormatShort)
+				case "title":
+					s = n.Title
+
+				case "created":
+					s = n.DateCreated.Local().Format(notemanager.OutputTimeFormatShort)
 				}
 				row = append(row, s)
 
@@ -146,7 +146,6 @@ func listNotes(filter NoteFilter) {
 			}
 			output = append(output, row)
 		}
-
 
 		var str string
 		for k, v := range fields {
@@ -159,7 +158,7 @@ func listNotes(filter NoteFilter) {
 		str += "\n"
 		for _, v := range output {
 			//fmt.Println(v)
-			for kk, vv:= range v {
+			for kk, vv := range v {
 				str += fmt.Sprintf("%-*s", maxLength[kk]+2, vv)
 			}
 			str += "\n"
@@ -195,7 +194,6 @@ func getNote(n Note, version string) {
 	}
 }
 
-
 // Return array of all note versions.
 // Each note version is represented by the file name with syntax YYYYMMDD-HHMMSS.
 func noteVersions(n Note) (versions []string) {
@@ -205,7 +203,7 @@ func noteVersions(n Note) (versions []string) {
 	}
 
 	re := regexp.MustCompile(`^[0-9]{8}\-[0-9]{6}`)
-	
+
 	for _, file := range files {
 		if re.MatchString(file.Name()) {
 			versions = append(versions, file.Name())
