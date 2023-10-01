@@ -5,9 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 	"io"
 	"log"
 	"os"
@@ -20,10 +17,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
 )
 
 // parse Command for FILTER arguments.
-// i.e. +tag, -tag, created.after, created.before, 
+// i.e. +tag, -tag, created.after, created.before,
 // modified.after, modified.before etc.
 func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 	for k, v := range args {
@@ -94,7 +95,7 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 				continue
 			}
 		}
-		
+
 		// try Note ID
 		if len(v) == 36 {
 			if _, err := uuid.Parse(v); err != nil {
@@ -126,7 +127,7 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 		}
 
 		rargs = args[k:]
-		break;
+		break
 	}
 
 	// check if note ids and other filters are supplied.
@@ -136,16 +137,16 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 		// assume to include deleted notes, if specific
 		// note ids are supplied
 		filter.IncludeDeleted = true
-		
-		cmp :=  NoteFilter{
-			Notes: filter.Notes,
+
+		cmp := NoteFilter{
+			Notes:          filter.Notes,
 			IncludeDeleted: filter.IncludeDeleted,
 		}
 		if reflect.DeepEqual(filter, cmp) == false {
 			Exit("Note IDs and filter terms supplied, but they are mutually exclusive")
 		}
 	}
-	
+
 	return
 }
 
@@ -171,7 +172,7 @@ func parseTimestamp(str string) (ts time.Time, err error) {
 				//2006-01-02
 				format = "20060102"
 			}
-		
+
 			r = regexp.MustCompile(`^[0-9]{4}/[0-9]{2}/[0-9]{2}$`)
 			if r.MatchString(v) {
 				format = "2006/01/02"
@@ -206,7 +207,7 @@ func parseTimestamp(str string) (ts time.Time, err error) {
 			}
 		}
 	}
-    
+
 	ts, err = time.ParseInLocation(format, str, time.Now().Location())
 	return
 }
@@ -239,7 +240,7 @@ func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs
 		rargs = args[k:]
 		break
 	}
-	
+
 	return
 }
 
@@ -248,16 +249,17 @@ func runEditor(filepath string) (err error) {
 	cmd := exec.Command(notemanager.Editor, filepath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	
-	err = cmd.Run()	
+
+	err = cmd.Run()
 	return
 }
 
+// returns a list of slice of Notes matching the filter
 func notes(filter NoteFilter) (notes []Note, err error) {
 	files, err := os.ReadDir(notemanager.NoteDir)
 	if err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 
 	for _, file := range files {
 		if file.IsDir() == false {
@@ -267,7 +269,7 @@ func notes(filter NoteFilter) (notes []Note, err error) {
 		noteId := uuid.MustParse(file.Name())
 
 		note, err := loadNote(noteId.String())
-		if (err != nil) {
+		if err != nil {
 			log.Fatal(err)
 		}
 
@@ -278,8 +280,8 @@ func notes(filter NoteFilter) (notes []Note, err error) {
 		if matches {
 			notes = append(notes, note)
 		}
-    }
-	
+	}
+
 	return
 }
 
@@ -304,22 +306,22 @@ func sortNotes(notes []Note) (ret []Note, err error) {
 		// one index per note and another per field.
 		// also obtain the maximum length of entry to get a clean table output.
 		for _, n := range notes {
-			// m = 
+			// m =
 			row := make([]string, 0)
 			var s string
-			for j, field := range fields {	
+			for j, field := range fields {
 				switch field {
-					case "id":
-						s = n.ShortId()
-					
-					case "tags":
-						s = strings.Join(n.Tags, ",")
+				case "id":
+					s = n.ShortId()
 
-					case "title":
-						s = n.Title
+				case "tags":
+					s = strings.Join(n.Tags, ",")
 
-					case "created":
-						s = n.DateCreated.Local().Format(notemanager.OutputTimeFormatShort)
+				case "title":
+					s = n.Title
+
+				case "created":
+					s = n.DateCreated.Local().Format(notemanager.OutputTimeFormatShort)
 				}
 				row = append(row, s)
 
@@ -330,7 +332,6 @@ func sortNotes(notes []Note) (ret []Note, err error) {
 			}
 			output = append(output, row)
 		}
-
 
 		var str string
 		for k, v := range fields {
@@ -343,7 +344,7 @@ func sortNotes(notes []Note) (ret []Note, err error) {
 		str += "\n"
 		for _, v := range output {
 			//fmt.Println(v)
-			for kk, vv:= range v {
+			for kk, vv := range v {
 				str += fmt.Sprintf("%-*s", maxLength[kk]+2, vv)
 			}
 			str += "\n"
@@ -360,7 +361,6 @@ func Exit(msg string) {
 	runtime.Goexit()
 }
 
-
 // Convert long texts into a better human readable
 // format. I.e. long lines will be auto broken into max 72 chars
 // or the terminal width, whatever is smaller.
@@ -368,14 +368,13 @@ func Autobreak(x string) (ret string) {
 	var lines []string
 	var width int
 	width = terminalWidth()
-	
+
 	if width > 72 {
 		width = 72
 	}
 
-
 	//x = strings.Replace(x, "\t", "    ", -1)
-	
+
 	// keep the already defined new lines, therefore create
 	// slice of lines.
 	for _, l := range strings.Split(x, "\n") {
@@ -397,29 +396,27 @@ func Autobreak(x string) (ret string) {
 		work = work[len(prefix):]
 
 		splitPos := width - len(prefix)
-	
-		for len(work) > splitPos  {
+
+		for len(work) > splitPos {
 			index := strings.LastIndex(work[0:splitPos], ` `)
 			if index == -1 {
-				lines = append(lines, prefix + work)
+				lines = append(lines, prefix+work)
 				work = ``
 			} else {
-				lines = append(lines, prefix + work[:index])
+				lines = append(lines, prefix+work[:index])
 				work = work[index+1:]
-			}			
-			
+			}
+
 		}
-		lines = append(lines, prefix + work)
+		lines = append(lines, prefix+work)
 		continue
 	}
-
 
 	for _, line := range lines {
 		ret += line + "\n"
 	}
 	return
 }
-
 
 // moves temporary note from tempDir to specific note directory inside noteDir
 func moveFile(id string, version string) (err error) {
@@ -441,7 +438,6 @@ func readMetadataFile(id string) (metadata Metadata, err error) {
 	err = yaml.Unmarshal(metadataRaw, &metadata)
 	return metadata, err
 }
-
 
 func noteId(file string) []byte {
 	body, err := os.ReadFile(file)
@@ -470,10 +466,9 @@ func noteId(file string) []byte {
 			fmt.Println("directory does not exist")
 		}
 	}
-	
+
 	return body
 }
-
 
 // generate sha1 hash from file
 func fileSha1(path string) (ret string, err error) {
@@ -492,4 +487,3 @@ func fileSha1(path string) (ret string, err error) {
 	ret = hex.EncodeToString(hashInBytes)
 	return
 }
-

@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package main
@@ -5,22 +6,22 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gosimple/conf"
-	"golang.org/x/term"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-)
 
+	"github.com/gosimple/conf"
+	"golang.org/x/term"
+)
 
 func parseConfig() (c Config) {
 	var cfgExists bool
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 
 	// Syntax of note version file names
 	c.VersionTimeFormat = "20060102-150405"
@@ -57,7 +58,7 @@ func parseConfig() (c Config) {
 	editors := []string{"nvim", "gvim", "notepad"}
 	for _, editor := range editors {
 		path, err := exec.LookPath(editor)
-		if (err == nil) {
+		if err == nil {
 			c.Editor = filepath.Clean(path)
 			break
 		}
@@ -106,12 +107,11 @@ func runFileManager(path string) {
 	//cmd := exec.Command("cmd", command...)
 	cmd := exec.Command("cmd", "/C", notemanager.FileManager, path)
 
-
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
-	
+
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
