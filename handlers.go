@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"os"
 	"os/exec"
@@ -15,6 +14,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -25,13 +26,13 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 		return
 	}
 
-	MAIN:
+MAIN:
 	for _, file := range args[0:] {
 		basename := filepath.Base(file)
 		sha1, err := fileSha1(file)
 		if err != nil {
 			sha1 = "failed"
-			fmt.Println(err)		
+			fmt.Println(err)
 		}
 		for _, a := range note.Attachments {
 			if sha1 == a.Sha1 {
@@ -45,7 +46,7 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = copyRegularFile(file, filepath.Clean(dstDir + "/" + basename))
+		err = copyRegularFile(file, filepath.Clean(dstDir+"/"+basename))
 		if err != nil {
 			if err.Error() == "File already exists. Aborting." {
 				fmt.Printf("File already attached. Use another name: %s.\n", basename)
@@ -54,8 +55,8 @@ func noteFileAddHandler(note Note, args []string) (err error) {
 			continue
 		}
 		note.Attachments = append(note.Attachments, Attachment{
-			Filename: basename,
-			Sha1: sha1,
+			Filename:    basename,
+			Sha1:        sha1,
 			DateCreated: time.Now().UTC(),
 		})
 		note.WriteData()
@@ -84,26 +85,25 @@ func noteFileHandler(note Note, args []string) (err error) {
 	if len(args) > 0 {
 		action = args[0]
 	}
-	
-	
+
 	switch action {
-		case "list":
-			fmt.Println("list files")
+	case "list":
+		fmt.Println("list files")
 
-		case "add":
-			noteFileAddHandler(note, args[1:])
+	case "add":
+		noteFileAddHandler(note, args[1:])
 
-		case "browse":
-			noteFileBrowseHandler(note)
+	case "browse":
+		noteFileBrowseHandler(note)
 
-		case "delete":
-			fmt.Println("delete file")
-		
-		case "purge":
-			fmt.Println("purge file")
+	case "delete":
+		fmt.Println("delete file")
 
-		default:
-			helpNoteList()
+	case "purge":
+		fmt.Println("purge file")
+
+	default:
+		helpNoteList()
 	}
 
 	return
@@ -113,7 +113,7 @@ func noteFileHandler(note Note, args []string) (err error) {
 func noteHandler() {
 	// is first arg an uuid?
 	id, err := uuid.Parse(os.Args[1])
-	if (err != nil) {
+	if err != nil {
 		// check if abbreviated uuid
 		if isUuidAbbr(os.Args[1]) == false {
 			fmt.Println("Invalid note syntax")
@@ -142,60 +142,61 @@ func noteHandler() {
 	if len(os.Args) > 3 {
 		rargs = os.Args[3:]
 	}
-	
 
-	switch(action) {
-		case "delete":
-			err := note.Delete()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("OK")
+	switch action {
+	case "delete":
+		err := note.Delete()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("OK")
 
-		case "undelete":
-			err := note.Undelete()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("OK")
+	case "undelete":
+		err := note.Undelete()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("OK")
 
-		case "file":
-			noteFileHandler(note, os.Args[3:])
+	case "file":
+		noteFileHandler(note, os.Args[3:])
 
-		case "modify":
-			noteModifyHandler(note, os.Args[3:])
+	case "modify":
+		noteModifyHandler(note, os.Args[3:])
 
-		case "edit":
-			err = noteEditHandler(note)
-			if err != nil {
-				log.Fatal(err)
-			}
+	case "edit":
+		err = noteEditHandler(note)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		case "read":
-			err = noteReadHandler(note, rargs)
-			if err != nil {
-				log.Fatal(err)
-			}
+	case "read":
+		err = noteReadHandler(note, rargs)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		case "print":
-			err = notePrintHandler(note, os.Args[3:])
-			if err != nil {
-				log.Fatal(err)
-			}
+	case "print":
+		err = notePrintHandler(note, os.Args[3:])
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		case "versions":
-			noteVersionsHandler(note, os.Args[3:])
+	case "versions":
+		noteVersionsHandler(note, os.Args[3:])
 
-
-		default:
-			fmt.Println("Unknown command")
+	default:
+		fmt.Println("Unknown command")
 	}
 }
 
 func noteFileBrowseHandler(note Note) {
 	path := filepath.Clean(fmt.Sprintf("%s/%s/attachments", notemanager.NoteDir, note.Id.String()))
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		fmt.Printf("%s: Note does not have attachments\n", note.ShortId())
+		return
+	}
 	runFileManager(path)
-
 }
 
 func noteModifyHandler(n Note, args []string) (err error) {
@@ -213,7 +214,7 @@ func noteModifyHandler(n Note, args []string) (err error) {
 	if len(rargs) > 0 {
 		n.Title = strings.Join(rargs, " ")
 	}
-	
+
 	err = n.WriteData()
 	if err == nil {
 		fmt.Println(n.ShortId() + ": Updated note.")
@@ -222,14 +223,14 @@ func noteModifyHandler(n Note, args []string) (err error) {
 }
 
 // CMD: note UUID edit
-func noteEditHandler (n Note) (err error) {
+func noteEditHandler(n Note) (err error) {
 	in, err := os.ReadFile(n.Path() + `/` + n.LatestVersion())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Create a temporary file in Notemanager tmp dir.
-	// Once the note editor has been closed check if checksum 
+	// Once the note editor has been closed check if checksum
 	// differs from the temporary file. If yes, move the file into
 	// note directory and create data file.
 	tmpFile := filepath.Clean(fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, n.Id.String()))
@@ -248,7 +249,7 @@ func noteEditHandler (n Note) (err error) {
 	cmd := exec.Command(notemanager.Editor, tmpFile)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	
+
 	err = cmd.Run()
 	if err != nil {
 		return
@@ -276,7 +277,7 @@ func noteEditHandler (n Note) (err error) {
 		n.WriteData()
 		fmt.Println(n.ShortId() + ": Created note version " + version)
 	}
- 
+
 	return
 }
 
@@ -356,8 +357,8 @@ func tagsHandler(filter NoteFilter, args []string) (err error) {
 	}
 
 	type TaggedNote struct {
-		Id string
-		Title string
+		Id          string
+		Title       string
 		DateCreated time.Time
 	}
 	tags := make(map[string][]TaggedNote)
@@ -377,11 +378,11 @@ func tagsHandler(filter NoteFilter, args []string) (err error) {
 	// or results of multiple calls vary slightly.
 	sort.Strings(keys)
 
-	switch (optOrder) {
-		case "count":
-			sort.SliceStable(keys, func(i, j int) bool {
-				return len(tags[keys[i]]) > len(tags[keys[j]])
-			})
+	switch optOrder {
+	case "count":
+		sort.SliceStable(keys, func(i, j int) bool {
+			return len(tags[keys[i]]) > len(tags[keys[j]])
+		})
 	}
 
 	// Default Output
@@ -431,7 +432,7 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 		if optCaseSensitive {
 			matchString = `(?m)(^.*%s.*$)`
 		}
-		
+
 		r := regexp.MustCompile(fmt.Sprintf(matchString, needle))
 		if r.Match(n.latestContent) {
 			var lines []string
@@ -486,7 +487,7 @@ func deleteHandler(notes []Note, args []string) (err error) {
 		if err != nil {
 			return
 		}
-		
+
 		fmt.Printf("%s: Deleted\n", n.ShortId())
 	}
 
