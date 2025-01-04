@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -333,13 +334,18 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 
 // add tags to note. if one of the notes already exist
 // the single tag is skipped, but the other tags are added
-func (n *Note) AddTags(t []string) {
+func (n *Note) AddTags(t []string) error {
 	for _, v := range t {
+		if regexp.MustCompile(`^[\pL0-9]+$`).MatchString(v) == false {
+			return fmt.Errorf("Error: Tags must be alphanumeric")
+		}
+
 		if slices.Contains(n.Tags, v) {
 			continue
 		}
 		n.Tags = append(n.Tags, v)
 	}
+	return nil
 }
 
 // removes tags from note. if one of the notes does not exist
@@ -356,8 +362,8 @@ RESTART:
 	}
 }
 
-func (n *Note) AddTag(t string) {
-	n.AddTags([]string{t})
+func (n *Note) AddTag(t string) error {
+	return n.AddTags([]string{t})
 }
 
 func (n *Note) RemoveTag(t string) {

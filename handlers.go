@@ -209,7 +209,11 @@ func noteModifyHandler(n Note, args []string) (err error) {
 		log.Fatal(err)
 	}
 
-	n.AddTags(addTags)
+	err = n.AddTags(addTags)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 	n.RemoveTags(delTags)
 	if len(rargs) > 0 {
 		n.Title = strings.Join(rargs, " ")

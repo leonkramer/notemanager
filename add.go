@@ -4,18 +4,20 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func addHandler(args []string) {
 	err := addNote(args)
-	if (err != nil) {
+	if err != nil {
 		log.Fatal(err)
 	}
 }
@@ -44,6 +46,11 @@ func addNote(args []string) (err error) {
 	for k, arg := range rargs {
 		// Arguments prefixed by + are tags
 		if arg[0] == '+' {
+			tag := arg[1:]
+			if regexp.MustCompile(`^[\pL0-9]+$`).MatchString(tag) == false {
+				fmt.Println("Error: Tags must be alphanumeric")
+				return
+			}
 			tags = append(tags, arg[1:])
 			rargs = args[k+1:]
 			continue
@@ -72,7 +79,6 @@ func addNote(args []string) (err error) {
 		helpNoteAdd()
 	}
 
-
 	in, err := os.ReadFile(filepath.Clean(notemanager.TemplateDir + "/" + optTemplate))
 	if err != nil {
 		in = []byte{}
@@ -80,7 +86,7 @@ func addNote(args []string) (err error) {
 	timestamp := time.Now().UTC()
 	id := uuid.New()
 	file := filepath.Clean(fmt.Sprintf("%s/tmp/%s", notemanager.DataDir, id.String()))
-	
+
 	// Replace placeholders
 	in = bytes.ReplaceAll(in, []byte("{{ nm.id }}"), []byte(id.String()))
 	in = bytes.ReplaceAll(in, []byte("{{ nm.created.date }}"), []byte(timestamp.Format("2006-01-02")))
@@ -90,7 +96,7 @@ func addNote(args []string) (err error) {
 	in = bytes.ReplaceAll(in, []byte("{{ nm.tags }}"), []byte(strings.Join(tags, ",")))
 
 	// Create a file in temporary dir.
-	// Once the note editor has been closed check if timestamp 
+	// Once the note editor has been closed check if timestamp
 	// is newer than the file. If newer, move the file into
 	// note directory and create data file.
 	err = os.WriteFile(file, in, 0600)
@@ -103,7 +109,7 @@ func addNote(args []string) (err error) {
 	cmd := exec.Command(notemanager.Editor, file)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	
+
 	err = cmd.Run()
 	if err != nil {
 		return
@@ -118,10 +124,10 @@ func addNote(args []string) (err error) {
 	}
 
 	note := Note{
-		Id: id,
-		Title: title,
-		Versions: versions,
-		Tags: tags,
+		Id:          id,
+		Title:       title,
+		Versions:    versions,
+		Tags:        tags,
 		DateCreated: timestampAfter.UTC(),
 	}
 	if timestampAfter != timestampInitial {

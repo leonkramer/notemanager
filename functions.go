@@ -216,7 +216,8 @@ func parseTimestamp(str string) (ts time.Time, err error) {
 func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs []string, err error) {
 	for k, v := range args {
 		// match +somestring
-		r := regexp.MustCompile(`^\+[\pL0-9]+$`)
+		//r := regexp.MustCompile(`^\+[\pL0-9]+$`)
+		r := regexp.MustCompile(`^\+`)
 		if r.MatchString(v) {
 			if slices.Contains(posTags, v[1:]) {
 				continue
@@ -226,7 +227,8 @@ func parseTagModifiers(args []string) (posTags []string, negTags []string, rargs
 		}
 
 		// match -somestring
-		r = regexp.MustCompile(`^\-[\pL0-9]+$`)
+		//r = regexp.MustCompile(`^\-[\pL0-9]+$`)
+		r = regexp.MustCompile(`^\-`)
 		if r.MatchString(v) {
 			if slices.Contains(negTags, v[1:]) {
 				continue
