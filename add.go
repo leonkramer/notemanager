@@ -47,7 +47,7 @@ func addNote(args []string) (err error) {
 		// Arguments prefixed by + are tags
 		if arg[0] == '+' {
 			tag := arg[1:]
-			if regexp.MustCompile(`^[^\W_]+$`).MatchString(tag) == false {
+			if regexp.MustCompile(`^[\pL0-9]+$`).MatchString(tag) == false {
 				fmt.Println("Error: Tags must be alphanumeric")
 				return
 			}

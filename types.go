@@ -336,7 +336,7 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 // the single tag is skipped, but the other tags are added
 func (n *Note) AddTags(t []string) error {
 	for _, v := range t {
-		if regexp.MustCompile(`^[^\W_]+$`).MatchString(v) == false {
+		if regexp.MustCompile(`^[\pL0-9]+$`).MatchString(v) == false {
 			return fmt.Errorf("Error: Tags must be alphanumeric")
 		}
 
