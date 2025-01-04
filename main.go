@@ -104,7 +104,7 @@ func main() {
 		undeleteHandler(notes, rargs[1:])
 
 	case "version":
-		fmt.Println(`Notemanager Version 0.51.1-alpha
+		fmt.Println(`Notemanager Version 0.60.1-alpha
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
 	default:
