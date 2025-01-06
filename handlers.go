@@ -161,8 +161,8 @@ func noteHandler() {
 	case "file":
 		noteFileHandler(note, os.Args[3:])
 
-	case "modify":
-		noteModifyHandler(note, os.Args[3:])
+	//case "modify":
+	//	noteModifyHandler(note, os.Args[3:])
 
 	case "edit":
 		err = noteEditHandler(note)
@@ -199,9 +199,30 @@ func noteFileBrowseHandler(note Note) {
 	runFileManager(path)
 }
 
+// Modify title or tag of note, or multiple tags of multiple notes
+// Modification of title of multiple notes is not possible.
+// CMD: note FILTER modify ARGS
+func modifyHandler(filter NoteFilter, notes []Note, args []string) (err error) {
+	_, _, rargs, err := parseTagModifiers(args)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(notes) > 1 && len(rargs) > 0 {
+		Exit("Cannot rename multiple notes")
+	}
+	for _, n := range notes {
+		err = noteModifyHandler(n, args)
+		if err != nil {
+			Exit(err.Error())
+		}
+	}
+	return
+}
+
+// Modify tag or title of single note.
 func noteModifyHandler(n Note, args []string) (err error) {
 	if len(args) == 0 {
-		fmt.Println("Not enough parameters")
+		Exit("Not enough parameters")
 		return
 	}
 	addTags, delTags, rargs, err := parseTagModifiers(args)
@@ -211,7 +232,7 @@ func noteModifyHandler(n Note, args []string) (err error) {
 
 	err = n.AddTags(addTags)
 	if err != nil {
-		fmt.Println(err.Error())
+		Exit(err.Error())
 		return
 	}
 	n.RemoveTags(delTags)

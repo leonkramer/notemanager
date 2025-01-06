@@ -82,8 +82,8 @@ func main() {
 	case "list":
 		listHandler(filter, rargs[1:])
 
-	//case "modify":
-	//	modifyHandler(notes, rargs[1:])
+	case "modify":
+		modifyHandler(filter, notes, rargs[1:])
 
 	case "print":
 		printHandler(notes, rargs[1:])
