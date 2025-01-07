@@ -489,3 +489,11 @@ func fileSha1(path string) (ret string, err error) {
 	ret = hex.EncodeToString(hashInBytes)
 	return
 }
+
+func FilterIsDefined(filter NoteFilter) bool {
+	cmp := NoteFilter{
+		Notes: filter.Notes,
+	}
+
+	return !reflect.DeepEqual(filter, cmp)
+}

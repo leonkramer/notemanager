@@ -70,6 +70,9 @@ func main() {
 	case "add":
 		addHandler(rargs[1:])
 
+	case "alias":
+		aliasHandler(filter, notes, rargs[1:])
+
 	case "delete":
 		deleteHandler(notes, rargs[1:])
 

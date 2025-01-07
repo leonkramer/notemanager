@@ -18,6 +18,7 @@ import (
 type Note struct {
 	Id            uuid.UUID    `yaml:"id"`
 	Title         string       `yaml:"title"`
+	Aliases       []string     `yaml:"aliases"`
 	Attachments   []Attachment `yaml:"attachments,omitempty"`
 	Versions      []string     `yaml:"versions"`
 	Tags          []string     `yaml:"tags,omitempty"`
@@ -41,6 +42,7 @@ type NoteFilter struct {
 	Notes          []string
 }
 
+// I guess, not in use
 type Metadata struct {
 	Id           uuid.UUID    `yaml:"id"`
 	Title        string       `yaml:"title"`
@@ -368,6 +370,27 @@ func (n *Note) AddTag(t string) error {
 
 func (n *Note) RemoveTag(t string) {
 	n.RemoveTags([]string{t})
+}
+
+func (n *Note) RemoveAliases(a []string) {
+RESTART:
+	for k, v := range n.Aliases {
+		if slices.Contains(a, v) {
+			n.Aliases = slices.Delete(n.Tags, k, k+1)
+			// slice has changed, could be out of bounds.
+			// Therefore loop through it again.
+			goto RESTART
+		}
+	}
+}
+
+func (n *Note) AddAliases(aliases []string) {
+	for _, a := range aliases {
+		if slices.Contains(n.Aliases, a) {
+			continue
+		}
+		n.Aliases = append(n.Aliases, a)
+	}
 }
 
 // returns path of note: $NoteDir/$UUID
