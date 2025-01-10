@@ -50,7 +50,6 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 
 		noteId, aliasExists := aliases.Get(v)
 		if aliasExists {
-			fmt.Printf("Alias Exists: %s\n", noteId.String())
 			filter.Notes = append(filter.Notes, noteId.String())
 			continue
 		}
