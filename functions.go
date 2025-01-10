@@ -48,6 +48,13 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 			continue
 		}
 
+		noteId, aliasExists := aliases.Get(v)
+		if aliasExists {
+			fmt.Printf("Alias Exists: %s\n", noteId.String())
+			filter.Notes = append(filter.Notes, noteId.String())
+			continue
+		}
+
 		// created.after:
 		if len(v) > 14 {
 			if v[0:14] == "created.after:" {

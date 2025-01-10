@@ -40,7 +40,10 @@ type NoteFilter struct {
 	IsDeleted      bool
 	HasFile        bool
 	Notes          []string
+	Aliases        []string
 }
+
+type NoteAliases map[string]uuid.UUID
 
 // I guess, not in use
 type Metadata struct {
@@ -411,5 +414,76 @@ func (n Note) moveTmpFile() (err error) {
 	os.MkdirAll(n.Path(), notemanager.DirPermission)
 	err = os.Rename(oldFile, newFile)
 
+	return
+}
+
+// Load aliases yaml file
+func (a *NoteAliases) Load() (err error) {
+	yml, err := os.ReadFile(filepath.Clean(notemanager.DataDir + "/aliases"))
+	if err != nil {
+		Exit(err.Error())
+		return
+	}
+
+	err = yaml.Unmarshal(yml, &a)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
+func (a *NoteAliases) Write() (err error) {
+	err = os.WriteFile(filepath.Clean(notemanager.DataDir+"/aliases"), a.Yaml(), 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
+// encode NoteAliases struct to yaml
+func (a *NoteAliases) Yaml() (encodedYaml []byte) {
+	encodedYaml, err := yaml.Marshal(a)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
+}
+
+// Check if Alias exists
+func (a NoteAliases) Get(needle string) (id uuid.UUID, exists bool) {
+	id, exists = a[needle]
+	return
+}
+
+// Delete alias from map
+func (a *NoteAliases) Delete(needle string) {
+	delete(*a, needle)
+}
+
+// Add alias to map
+func (a *NoteAliases) Set(alias string, noteId uuid.UUID) {
+	(*a)[alias] = noteId
+}
+
+// Find alias by uuid and return slice of alias strings
+func (a *NoteAliases) FindById(noteId uuid.UUID) (ret []string) {
+	for alias, id := range *a {
+		if noteId == id {
+			ret = append(ret, alias)
+		}
+	}
+	return
+}
+
+// Delete all aliases of note
+func (a *NoteAliases) DeleteById(noteId uuid.UUID) {
+	for alias, id := range *a {
+		if noteId == id {
+			delete(*a, alias)
+		}
+	}
 	return
 }

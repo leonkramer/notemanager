@@ -116,14 +116,17 @@ func noteHandler() {
 	if err != nil {
 		// check if abbreviated uuid
 		if isUuidAbbr(os.Args[1]) == false {
-			fmt.Println("Invalid note syntax")
-			os.Exit(2)
-		}
-
-		id, err = uuidByAbbr(os.Args[1])
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(2)
+			var ok bool
+			if id, ok = aliases.Get(os.Args[1]); ok == false {
+				fmt.Println("Invalid note syntax")
+				os.Exit(2)
+			}
+		} else {
+			id, err = uuidByAbbr(os.Args[1])
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(2)
+			}
 		}
 	}
 
