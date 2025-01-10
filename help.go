@@ -213,7 +213,7 @@ ARGUMENTS
 
 func helpNoteAlias() {
 	x := `USAGE
-    ./note [NOTE] alias [add STRING...|delete STRING...|list]
+    ./note [NOTE] alias [set STRING|delete|list]
 
 
 DESCRIPTION
@@ -224,10 +224,9 @@ ARGUMENTS
     FILTER
         For explanation of filters run: ./note -h
     PARAMETERS
-        add STRING...
-            Add note alias
-        delete STRING...     
-            Delete note aliases
+        set STRING
+            Set note aliases
+        delete      Delete note alias
         list        List all aliases of note
 
 `

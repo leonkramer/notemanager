@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/gosimple/conf"
 )
 
@@ -42,6 +43,28 @@ func main() {
 
 	// remaining args
 	rargs := fs.Args()
+
+	aliases := make(NoteAliases)
+	aliases.Load()
+	if id, k := aliases.Get("test"); k {
+		fmt.Printf("test exist: %s\n", id)
+	}
+	aliases.Get("testalias2")
+	if id, k := aliases.Get("testalias"); k {
+		fmt.Printf("testalias exist: %s\n", id)
+	}
+	if id, k := aliases.Get("another"); k {
+		fmt.Printf("another exist: %s\n", id)
+	}
+	aliases.Delete(("testalias"))
+	aliases.Set("new2", uuid.New())
+	aliases.Write()
+
+	uuid, err := uuid.Parse("8da6252e-587d-496b-bbd2-7be728c9295c")
+	if err != nil {
+		Exit(err.Error())
+	}
+	fmt.Printf("debug=%+v\n", aliases.FindById(uuid))
 
 	// expected cmd syntax: ./note [ FILTER ] cmd args
 	filter, rargs, err := parseFilter(rargs)
