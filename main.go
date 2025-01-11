@@ -80,11 +80,11 @@ func main() {
 	case "delete":
 		deleteHandler(notes, rargs[1:])
 
-	//case "edit":
-	//	editHandler(notes, rargs[1:])
+	case "edit":
+		editHandler(notes, rargs[1:])
 
-	//case "file":
-	//	fileHandler(notes, rargs[1:])
+	case "file":
+		fileHandler(notes, rargs[1:])
 
 	case "list":
 		listHandler(filter, rargs[1:])
@@ -114,10 +114,13 @@ func main() {
 		fmt.Println(`Notemanager Version 0.63.1-alpha
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
+	case "versions":
+		versionsHandler(notes, rargs[1:])
+
 	default:
 		// this handler should be replaced by
 		// other specific handlers
-		noteHandler()
+		Exit("Unknown command")
 	}
 
 	// runtime ended properly, so exit with code 0.
