@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -452,13 +453,18 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 	}
 	needle := rargs[0]
 
-	var matches []string
+	type FileMatch struct {
+		Id      string
+		Lines   []string
+		Excerpt string
+	}
+	var matches []FileMatch
 	for _, n := range notes {
 		// search case insensitive by default
 		//matchString := `(?im)(^.*%s.*$)`
-		matchString := `(?im)(%s)`
+		matchString := `(?im)(.*%s.*)`
 		if optCaseSensitive {
-			matchString = `(?m)(^.*%s.*$)`
+			matchString = `(?m)(.*%s.*)`
 		}
 
 		r := regexp.MustCompile(fmt.Sprintf(matchString, needle))
@@ -469,15 +475,24 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 				lines = append(lines, sc.Text())
 			}
 
+			var matchLines []string
 			for i, line := range lines {
 				if r.MatchString(line) {
-					matches = append(matches, fmt.Sprintf(`%s at line %d`, n.Id.String(), i+1))
+					matchLines = append(matchLines, strconv.Itoa(i+1))
 				}
 			}
 
-			/* matches := r.FindSubmatch(n.latestContent)
+			if len(matchLines) > 0 {
+				matches = append(matches, FileMatch{
+					Id:      n.ShortId(),
+					Lines:   matchLines,
+					Excerpt: "",
+				})
+			}
+
+			/* 		matches := r.FindSubmatch(n.latestContent)
 			for _, v := range matches {
-				fmt.Printf("Match: %s\n", v)
+				//	fmt.Printf("Match: %s\n", v)
 			} */
 		}
 	}
@@ -487,10 +502,11 @@ func searchHandler(filter NoteFilter, args []string) (err error) {
 	if len(matches) > 0 {
 		fmt.Println()
 		fmt.Println(`Matches:`)
-	}
 
-	for _, m := range matches {
-		fmt.Printf(" - %s\n", m)
+		for _, m := range matches {
+			//fmt.Printf(" - %s\n", m)
+			fmt.Printf(" - %s at lines %s\n", m.Id, strings.Join(m.Lines, ", "))
+		}
 	}
 
 	return
