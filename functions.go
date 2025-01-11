@@ -48,6 +48,12 @@ func parseFilter(args []string) (filter NoteFilter, rargs []string, err error) {
 			continue
 		}
 
+		noteId, aliasExists := aliases.Get(v)
+		if aliasExists {
+			filter.Notes = append(filter.Notes, noteId.String())
+			continue
+		}
+
 		// created.after:
 		if len(v) > 14 {
 			if v[0:14] == "created.after:" {
@@ -488,4 +494,12 @@ func fileSha1(path string) (ret string, err error) {
 	hashInBytes := hash.Sum(nil)[:20]
 	ret = hex.EncodeToString(hashInBytes)
 	return
+}
+
+func FilterIsDefined(filter NoteFilter) bool {
+	cmp := NoteFilter{
+		Notes: filter.Notes,
+	}
+
+	return !reflect.DeepEqual(filter, cmp)
 }

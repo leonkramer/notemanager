@@ -11,6 +11,7 @@ import (
 
 var cfg *conf.Config
 var notemanager Config
+var aliases NoteAliases
 
 func main() {
 	// disable timestamp in Fatal Logs
@@ -43,6 +44,9 @@ func main() {
 	// remaining args
 	rargs := fs.Args()
 
+	aliases = make(NoteAliases)
+	aliases.Load()
+
 	// expected cmd syntax: ./note [ FILTER ] cmd args
 	filter, rargs, err := parseFilter(rargs)
 	if err != nil {
@@ -69,6 +73,9 @@ func main() {
 	switch rargs[0] {
 	case "add":
 		addHandler(rargs[1:])
+
+	case "alias":
+		aliasHandler(filter, notes, rargs[1:])
 
 	case "delete":
 		deleteHandler(notes, rargs[1:])
@@ -104,7 +111,7 @@ func main() {
 		undeleteHandler(notes, rargs[1:])
 
 	case "version":
-		fmt.Println(`Notemanager Version 0.61.1-alpha
+		fmt.Println(`Notemanager Version 0.63.1-alpha
 Author: Leon Kramer <leonkramer@gmail.com>`)
 
 	default:

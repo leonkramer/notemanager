@@ -3,7 +3,7 @@ package main
 import "log"
 
 func helpNote() {
-    x := `USAGE
+	x := `USAGE
     ./note [FILTER] ACTION [OPTIONS] [PARAMETERS]
 
     For more specific usage use -h after the ACTION argument. E.g. ./note add -h
@@ -37,11 +37,11 @@ COMMANDS
 
 `
 	x += helpFilter()
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
 }
 
 func helpNoteList() {
-    x := `USAGE
+	x := `USAGE
     ./note [FILTER] list [notes|templates]
 
 
@@ -56,13 +56,13 @@ ARGUMENTS
 
 `
 
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
 }
 
 // ====================================================================
 // Note Width = 72
 func helpNoteSearch() {
-    x := `USAGE
+	x := `USAGE
     ./note [FILTER] search [OPTIONS] [REGEXP]
     
 
@@ -79,13 +79,13 @@ ARGUMENTS
     REGEXP
         Regular Expression to search for
 `
-    //x += helpFilter()
+	//x += helpFilter()
 
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
 }
 
 func helpFilter() (x string) {
-    x = `FILTER
+	x = `FILTER
     DESCRIPTION
         FILTER is a collection of options and terms or just a list of specific note ids to built a selection of notes. All supplied filter terms must match in order for a note to be included in the note selection. By default deleted notes are excluded from the note selection.
 
@@ -130,12 +130,12 @@ func helpFilter() (x string) {
             UUID (36-bytes)     Specific note with full UUID
 `
 
-    return Autobreak(x)
-    //return
+	return Autobreak(x)
+	//return
 }
 
 func helpNoteTags() {
-    x := `USAGE
+	x := `USAGE
     ./note [FILTER] tags [OPTIONS]
 
 
@@ -156,11 +156,11 @@ ARGUMENTS
 
 `
 
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
 }
 
 func helpNoteAdd() {
-    x := `USAGE
+	x := `USAGE
     ./note add [OPTIONS] [TAG...] [TITLE]
 
 
@@ -181,13 +181,13 @@ ARGUMENTS
 EXAMPLE
     Create a note with tags 'important' and 'exam' with the title 'Exam Deadline'
         note add +important +exam Exam Deadline
-`        
+`
 
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
 }
 
 func helpNoteFile() {
-    x := `USAGE
+	x := `USAGE
     ./note [FILTER] file [add FILE...|browse|delete FILE...|list|purge]
 
 
@@ -208,5 +208,27 @@ ARGUMENTS
         purge       Purge deleted file attachments of notes
 
 `
-    log.Fatal(Autobreak(x))
+	log.Fatal(Autobreak(x))
+}
+
+func helpNoteAlias() {
+	x := `USAGE
+    ./note [FILTER] alias [set STRING|list|remove]
+
+
+DESCRIPTION
+    List or modify alias of notes.
+
+
+ARGUMENTS
+    FILTER
+        For explanation of filters run: ./note -h
+    PARAMETERS
+        set STRING
+            Set alias for a single note. Filter must be single note.
+        remove      Delete note alias. Filter must be single note.
+        list        List aliases
+
+`
+	log.Fatal(Autobreak(x))
 }
