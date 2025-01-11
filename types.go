@@ -326,8 +326,57 @@ func (n Note) MatchesFilter(filter NoteFilter) (ret bool, err error) {
 		}
 	}
 
+	// check if in supplied notes
 	if len(filter.Notes) > 0 {
 		if slices.Contains(filter.Notes, n.Id.String()) == false {
+			ret = false
+			return
+		}
+	}
+
+	// check timestamps
+
+	// created.before
+	if filter.CreatedBefore.IsZero() == false {
+		if n.DateCreated.After(filter.CreatedBefore) {
+			ret = false
+			return
+		}
+	}
+
+	// created.after
+	if filter.CreatedAfter.IsZero() == false {
+		if n.DateCreated.Before(filter.CreatedAfter) {
+			ret = false
+			return
+		}
+	}
+
+	// modified.before
+	if filter.ModifiedBefore.IsZero() == false {
+		var modified time.Time
+		if len(n.DateModified) == 0 {
+			modified = n.DateCreated
+		} else {
+			modified = n.DateModified[len(n.DateModified)-1]
+		}
+
+		if modified.After(filter.ModifiedBefore) {
+			ret = false
+			return
+		}
+	}
+
+	// modified.after
+	if filter.ModifiedAfter.IsZero() == false {
+		var modified time.Time
+		if len(n.DateModified) == 0 {
+			modified = n.DateCreated
+		} else {
+			modified = n.DateModified[len(n.DateModified)-1]
+		}
+
+		if modified.Before(filter.ModifiedAfter) {
 			ret = false
 			return
 		}
