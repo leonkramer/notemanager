@@ -15,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Command Handler: note ID file add FILE [..]
@@ -108,90 +106,6 @@ func noteFileHandler(note Note, args []string) (err error) {
 	}
 
 	return
-}
-
-// note UUID ...
-func noteHandler() {
-	// is first arg an uuid?
-	id, err := uuid.Parse(os.Args[1])
-	if err != nil {
-		// check if abbreviated uuid
-		if isUuidAbbr(os.Args[1]) == false {
-			var ok bool
-			if id, ok = aliases.Get(os.Args[1]); ok == false {
-				fmt.Println("Invalid note syntax")
-				os.Exit(2)
-			}
-		} else {
-			id, err = uuidByAbbr(os.Args[1])
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(2)
-			}
-		}
-	}
-
-	note, err := loadNote(id.String())
-
-	if err != nil {
-		fmt.Println("err: ", err)
-	}
-
-	action := "read"
-	if len(os.Args) > 2 {
-		action = os.Args[2]
-	}
-
-	var rargs []string
-	if len(os.Args) > 3 {
-		rargs = os.Args[3:]
-	}
-
-	switch action {
-	case "delete":
-		err := note.Delete()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("OK")
-
-	case "undelete":
-		err := note.Undelete()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("OK")
-
-	case "file":
-		noteFileHandler(note, os.Args[3:])
-
-	//case "modify":
-	//	noteModifyHandler(note, os.Args[3:])
-
-	case "edit":
-		err = noteEditHandler(note)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	case "read":
-		err = noteReadHandler(note, rargs)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	case "print":
-		err = notePrintHandler(note, os.Args[3:])
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	case "versions":
-		noteVersionsHandler(note, os.Args[3:])
-
-	default:
-		fmt.Println("Unknown command")
-	}
 }
 
 func noteFileBrowseHandler(note Note) {
@@ -552,5 +466,21 @@ func readHandler(notes []Note, args []string) (err error) {
 		noteReadHandler(n, args)
 	}
 
+	return
+}
+
+func versionsHandler(notes []Note, args []string) (err error) {
+	err = noteVersionsHandler(notes[0], args)
+	if err != nil {
+		Exit(err.Error())
+	}
+	return
+}
+
+func fileHandler(notes []Note, args []string) (err error) {
+	err = noteFileHandler(notes[0], args)
+	if err != nil {
+		Exit(err.Error())
+	}
 	return
 }

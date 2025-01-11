@@ -3,7 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 )
+
+func editHandler(notes []Note, args []string) (err error) {
+	if len(notes) > 1 {
+		Exit("Only supply one note")
+	}
+
+	if len(args) > 0 {
+		Exit("Error")
+	}
+	note := notes[0]
+
+	err = noteEditHandler(note)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
+}
 
 func aliasHandler(filter NoteFilter, notes []Note, args []string) (err error) {
 	var optHelp bool
