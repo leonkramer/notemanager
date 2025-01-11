@@ -3,16 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"strings"
 )
 
 func aliasHandler(filter NoteFilter, notes []Note, args []string) (err error) {
-	/* 	if FilterIsDefined(filter) {
-	   		Exit("Can Note ID ")
-	   	} else {
-	   		Exit("has no Tags")
-	   	} */
-
 	var optHelp bool
 	fs := flag.NewFlagSet("note alias", flag.ContinueOnError)
 	fs.Usage = func() { helpNoteAlias() }
@@ -29,53 +22,67 @@ func aliasHandler(filter NoteFilter, notes []Note, args []string) (err error) {
 
 	args = fs.Args()
 
-	// default: list
 	if len(args) == 0 {
-		args = append(args, "list")
+		helpNoteAlias()
 	}
 
 	cmd, rargs := args[0], args[1:]
 
 	switch cmd {
-	case "add":
-		if len(notes) > 1 {
-			Exit("Adding alias to multiple notes not allowed")
+	case "set":
+		err = aliasSetHandler(notes, rargs)
+		if err != nil {
+			Exit(err.Error())
 		}
-
-		if len(rargs) == 0 {
-			helpNoteAlias()
-		}
-
-		n := notes[0]
-		n.AddAliases(rargs)
-
-		fmt.Printf("%s: OK\n", n.ShortId())
-		n.WriteData()
 
 	case "list":
 		for _, n := range notes {
-			if len(n.Aliases) > 0 {
-				fmt.Printf("%s: %s\n", n.ShortId(), strings.Join(n.Aliases, ", "))
-			}
+			fmt.Printf("%s: %s\n", n.ShortId(), n.Alias)
 		}
 
-	case "delete":
+	case "remove":
 		if len(notes) > 1 {
-			Exit("Deleting aliases of multiple notes not allowed")
+			helpNoteAlias()
 		}
 
-		if len(rargs) == 0 {
+		if len(rargs) > 0 {
 			helpNoteAlias()
 		}
 
 		n := notes[0]
-		n.RemoveAliases(rargs)
+		n.Alias = ""
+
+		aliases.DeleteById(n.Id)
+		aliases.Write()
+
 		fmt.Printf("%s: OK\n", n.ShortId())
 		n.WriteData()
 
 	default:
 		helpNoteAlias()
 	}
+
+	return
+}
+
+func aliasSetHandler(notes []Note, args []string) (err error) {
+	if len(args) == 0 || len(args) > 1 {
+		helpNoteAlias()
+	}
+
+	if len(notes) > 1 {
+		helpNoteAlias()
+	}
+
+	n := notes[0]
+	n.Alias = args[0]
+
+	aliases.DeleteById(n.Id)
+	aliases.Set(n.Alias, n.Id)
+	aliases.Write()
+
+	fmt.Printf("%s: OK\n", n.ShortId())
+	n.WriteData()
 
 	return
 }

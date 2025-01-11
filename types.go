@@ -18,7 +18,7 @@ import (
 type Note struct {
 	Id            uuid.UUID    `yaml:"id"`
 	Title         string       `yaml:"title"`
-	Aliases       []string     `yaml:"aliases"`
+	Alias         string       `yaml:"alias,omitempty"`
 	Attachments   []Attachment `yaml:"attachments,omitempty"`
 	Versions      []string     `yaml:"versions"`
 	Tags          []string     `yaml:"tags,omitempty"`
@@ -375,25 +375,12 @@ func (n *Note) RemoveTag(t string) {
 	n.RemoveTags([]string{t})
 }
 
-func (n *Note) RemoveAliases(a []string) {
-RESTART:
-	for k, v := range n.Aliases {
-		if slices.Contains(a, v) {
-			n.Aliases = slices.Delete(n.Tags, k, k+1)
-			// slice has changed, could be out of bounds.
-			// Therefore loop through it again.
-			goto RESTART
-		}
-	}
+func (n *Note) RemoveAlias() {
+	n.Alias = ""
 }
 
-func (n *Note) AddAliases(aliases []string) {
-	for _, a := range aliases {
-		if slices.Contains(n.Aliases, a) {
-			continue
-		}
-		n.Aliases = append(n.Aliases, a)
-	}
+func (n *Note) SetAlias(str string) {
+	n.Alias = str
 }
 
 // returns path of note: $NoteDir/$UUID
@@ -465,6 +452,36 @@ func (a *NoteAliases) Delete(needle string) {
 
 // Add alias to map
 func (a *NoteAliases) Set(alias string, noteId uuid.UUID) {
+	if regexp.MustCompile(`^[\pL0-9]+$`).MatchString(alias) == false {
+		Exit("Error: Alias must consist of letters or numbers")
+	}
+
+	blocklist := []string{
+		"",
+		"add",
+		"alias",
+		"delete",
+		"edit",
+		"list",
+		"modify",
+		"search",
+		"tags",
+		"version",
+		"versions",
+	}
+	if slices.Contains(blocklist, alias) {
+		Exit("Cannot set alias: " + alias)
+	}
+
+	if isUuidAbbr(alias) {
+		Exit("Alias must not be uuid")
+	}
+
+	if _, err := uuid.Parse(alias); err == nil {
+		Exit("Alias must not be uuid")
+	}
+
+	a.DeleteById(noteId)
 	(*a)[alias] = noteId
 }
 
