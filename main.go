@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -53,6 +54,17 @@ func main() {
 	rargs := fs.Args()
 
 	notemanager = parseConfig()
+
+	if DirExists(notemanager.DataDir) == false {
+		r := askYesNo(fmt.Sprintf("Notemanager data directory is missing.\nCreate base directory %s?", notemanager.DataDir))
+		if r {
+			fmt.Println("ok, creating")
+			initDataDir()
+		} else {
+			fmt.Println("nope, nope")
+		}
+
+	}
 
 	aliases = make(NoteAliases)
 	aliases.Load()

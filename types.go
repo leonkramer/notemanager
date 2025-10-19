@@ -58,6 +58,8 @@ type Metadata struct {
 }
 
 type Config struct {
+	AliasesPath            string
+	NotercPath             string
 	DataDir                string
 	Editor                 string
 	NoteDir                string

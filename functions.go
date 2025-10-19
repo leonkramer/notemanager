@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
@@ -517,4 +518,51 @@ func FilterIsDefined(filter NoteFilter) bool {
 	}
 
 	return !reflect.DeepEqual(filter, cmp)
+}
+
+// Returns true if directory exists else false
+func DirExists(dir string) bool {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func askYesNo(prompt string) bool {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("%s yes/No: ", prompt)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+	}
+	input = strings.TrimSpace(strings.ToLower(input))
+	if input == "y" || input == "yes" {
+		return true
+	}
+	return false
+}
+
+func initDataDir() error {
+	folders := []string{
+		notemanager.DataDir,
+		notemanager.NoteDir,
+		notemanager.TempDir,
+		notemanager.TemplateDir,
+	}
+	for _, f := range folders {
+		fmt.Println(`Creating directory ` + f)
+		err := os.Mkdir(f, 0700)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println(`Creating file ` + notemanager.AliasesPath)
+	f, err := os.OpenFile(notemanager.AliasesPath, os.O_RDONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	return f.Close()
+
+	return nil
 }
