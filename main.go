@@ -13,6 +13,10 @@ var cfg *conf.Config
 var notemanager Config
 var aliases NoteAliases
 
+// populated during go build
+var build_version string
+var build_commit string
+
 func main() {
 	// disable timestamp in Fatal Logs
 	log.SetFlags(0)
@@ -23,16 +27,17 @@ func main() {
 	// exit with os.Exit(0).
 	defer os.Exit(1)
 
-	notemanager = parseConfig()
-
 	var optHelp bool
 	var optAll bool
+	var optVersion bool
 	fs := flag.NewFlagSet("note", flag.ContinueOnError)
 	fs.Usage = func() { helpNote() }
 	fs.BoolVar(&optAll, "a", false, "Select all notes in filter, include deleted")
 	fs.BoolVar(&optAll, "all", false, "Select all notes in filter, include deleted")
 	fs.BoolVar(&optHelp, "h", false, "Display usage")
 	fs.BoolVar(&optHelp, "help", false, "Display usage")
+	fs.BoolVar(&optVersion, "v", false, "Display version")
+	fs.BoolVar(&optVersion, "version", false, "Display version")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return
 	}
@@ -41,8 +46,21 @@ func main() {
 		helpNote()
 	}
 
+	if optVersion {
+		displayVersion()
+	}
+
 	// remaining args
 	rargs := fs.Args()
+
+	notemanager = parseConfig()
+
+	if DirExists(notemanager.DataDir) == false {
+		r := askYesNo(fmt.Sprintf("Notemanager data directory is missing.\nCreate base directory %s?", notemanager.DataDir))
+		if r {
+			initDataDir()
+		}
+	}
 
 	aliases = make(NoteAliases)
 	aliases.Load()
@@ -109,10 +127,6 @@ func main() {
 
 	case "undelete":
 		undeleteHandler(notes, rargs[1:])
-
-	case "version":
-		fmt.Println(`Notemanager Version 0.63.1-alpha
-Author: Leon Kramer <leonkramer@gmail.com>`)
 
 	case "versions":
 		versionsHandler(notes, rargs[1:])

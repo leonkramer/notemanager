@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package main
@@ -5,12 +6,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gosimple/conf"
-	"golang.org/x/term"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/gosimple/conf"
+	"golang.org/x/term"
 )
 
 func parseConfig() (c Config) {
@@ -18,8 +20,8 @@ func parseConfig() (c Config) {
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 
 	// Syntax of note version file names
 	c.VersionTimeFormat = "20060102-150405"
@@ -50,20 +52,26 @@ func parseConfig() (c Config) {
 	// default data directory
 	c.DataDir = filepath.Clean(homedir + "/.notes")
 
+	// default noterc path
+	c.NotercPath = filepath.Clean(homedir + `/.noterc`)
+
+	// Path of aliases file
+	c.AliasesPath = filepath.Clean(c.DataDir + `/aliases`)
+
 	// set default editor
 	editors := []string{"nano", "nvim", "vim", "vi", "emacs", "ed"}
 	for _, editor := range editors {
 		path, err := exec.LookPath(editor)
-		if (err == nil) {
+		if err == nil {
 			c.Editor = filepath.Clean(path)
 			break
 		}
 	}
-	
-	cfg, err := conf.ReadFile(filepath.Clean(homedir + "/.noterc"))
+
+	cfg, err := conf.ReadFile(c.NotercPath)
 	if err == nil {
 		cfgExists = true
-    } else {
+	} else {
 		cfgExists = false
 	}
 
@@ -95,17 +103,16 @@ func parseConfig() (c Config) {
 	return
 }
 
-
 func runFileManager(path string) {
 	//command := append([]Any{"cmd", "/C"}, notemanager.FileManager..., path)
 	//command := append(notemanager.FileManager, path)
 	cmd := exec.Command(notemanager.FileManager, path)
-	
+
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
-	
+
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())

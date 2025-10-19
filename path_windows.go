@@ -53,6 +53,12 @@ func parseConfig() (c Config) {
 	// default data directory
 	c.DataDir = filepath.Clean(homedir + `/AppData/Roaming/Notemanager`)
 
+	// default noterc path
+	c.NotercPath = filepath.Clean(homedir + `/AppData/Roaming/Notemanager/noterc`)
+
+	// Path of aliases file
+	c.AliasesPath = filepath.Clean(c.DataDir + `/aliases`)
+
 	//c.Editor = `notepad`
 	// set default editor
 	editors := []string{"nvim", "gvim", "notepad"}
@@ -65,7 +71,7 @@ func parseConfig() (c Config) {
 	}
 
 	cfgExists = false
-	cfg, err := conf.ReadFile(filepath.Clean(homedir + `/AppData/Roaming/Notemanager/noterc`))
+	cfg, err := conf.ReadFile(c.NotercPath)
 	if err == nil {
 		cfgExists = true
 	}
