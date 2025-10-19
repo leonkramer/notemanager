@@ -1,0 +1,34 @@
+##
+# Option: datadir
+##
+# Absolute path to directory in which all notes and related files are stored.
+#
+# Note: The default values here are actually invalid for the setting because
+# expansion of vars is not possible.
+#
+# Unix default: <USER HOME DIR>/.notes
+# Windows default: <USER HOME DIR>/AppData/Roaming/Notemanager
+##
+
+#datadir = ""
+
+
+##
+# Option: editor
+##
+# Path to executable for writing notes.
+# By default the OS looks up various options. First match wins.
+# Unix: [nano, nvim, vim, vi, emacs, ed]
+# Windows: [nvim, gvim, notepad]
+##
+
+editor = "/usr/bin/vim"
+
+
+##
+# Option: terminalReader
+##
+# Path to executable for reading notes.
+##
+
+terminalReader = "/usr/bin/less"
