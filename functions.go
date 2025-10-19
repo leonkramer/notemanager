@@ -23,6 +23,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// display notemanager version
+func displayVersion() {
+	x := fmt.Sprintf(`
+Notemanager
+--
+Author:       Leon Kramer <leonkramer@gmail.com>
+Commit:       %s
+Version:      %s
+`,
+		build_commit,
+		build_version,
+	)
+	log.Fatal(Autobreak(x))
+}
+
 // parse Command for FILTER arguments.
 // i.e. +tag, -tag, created.after, created.before,
 // modified.after, modified.before etc.
